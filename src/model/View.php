@@ -39,22 +39,31 @@ abstract class View extends Entity
         $this->model()->asView(true);
 
         // 初始化模型
-        if (!$this->isEmpty() && !$with) {
-            $this->initData();
+        if (!$this->isEmpty()) {
+            $this->initData($with);
         }
     }
 
     /**
      * 初始化实体数据属性（如果存在关联查询则会延迟执行）.
      *
+     * @param bool  $with  是否处理关联数据
      * @return void
      */
-    public function initData()
+    public function initData(bool $with = true)
     {
         // 获取实体属性
         $properties = $this->getEntityProperties();
         $data       = $this->model()->getData();
         foreach ($properties as $key => $field) {
+            if (!$with) {
+                // 确保存在基础模型数据
+                if (isset($data[$field])) {
+                    $this->$field = $data[$field];
+                }
+                continue;
+            }
+
             if (is_int($key)) {
                 $this->$field = $this->fetchViewAttr($field);
             } elseif (strpos($field, '->')) {
