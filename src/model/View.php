@@ -40,25 +40,25 @@ abstract class View extends Entity
 
         // 初始化模型
         if (!$this->isEmpty()) {
-            $this->initData($with);
+            $this->initData(!$with);
         }
     }
 
     /**
      * 初始化实体数据属性（如果存在关联查询则会延迟执行）.
      *
-     * @param bool  $with  是否处理关联数据
+     * @param bool  $relation  是否处理关联数据
      * @return void
      */
-    public function initData(bool $with = true)
+    public function initData(bool $relation = true)
     {
         // 获取实体属性
         $properties = $this->getEntityProperties();
         $data       = $this->model()->getData();
         foreach ($properties as $key => $field) {
-            if (!$with) {
+            if (!$relation) {
                 // 确保存在基础模型数据
-                if (isset($data[$field])) {
+                if (isset($data[$field])) { 
                     $this->$field = $data[$field];
                 }
                 continue;
