@@ -109,18 +109,22 @@ abstract class View extends Entity
      */
     private function getEntityProperties(): array
     {
-        $reflection = new ReflectionClass($this);
-        $options    = $this->getOptions();
-        $mapping    = $options['property_mapping'] ?? [];
-        $properties = [];
+        $properties = $this->getOption('view_properties');
+        if (empty($properties)) {
+            $reflection = new ReflectionClass($this);
+            $options    = $this->getOptions();
+            $mapping    = $options['property_mapping'] ?? [];
+            $properties = [];
 
-        foreach ($reflection->getProperties() as $property) {
-            $field = $property->getName();
-            if (isset($mapping[$field])) {
-                $properties[$field] = $mapping[$field];
-            } else {
-                $properties[] = $field;
+            foreach ($reflection->getProperties() as $property) {
+                $field = $property->getName();
+                if (isset($mapping[$field])) {
+                    $properties[$field] = $mapping[$field];
+                } else {
+                    $properties[] = $field;
+                }
             }
+            $this->setOption('view_properties', $properties);
         }
 
         return $properties;
@@ -174,7 +178,7 @@ abstract class View extends Entity
      * @param int $options json参数
      * @return string
      */
-    public function tojson(int $options = JSON_UNESCAPED_UNICODE): string
+    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
     {
         return json_encode($this->toArray(), $options);
     }
@@ -269,7 +273,7 @@ abstract class View extends Entity
      */
     public function __unset(string $name): void
     {
-        __unset($this->$name);
+        unset($this->$name);
     }
 
     public function __debugInfo()
