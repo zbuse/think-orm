@@ -256,14 +256,15 @@ class Builder extends BaseBuilder
         // 字段分析
         $key = $field ? $this->parseKey($query, $field, true) : '';
 
-        [$exp, $value, $param] = $val;
+        [$exp, $value] = $val;
 
         // 检测操作符
         if (!is_string($exp)) {
             throw new Exception('where express error:' . var_export($exp, true));
         }
 
-        $exp = strtoupper($exp);
+        $param = $val[2] ?? null;
+        $exp   = strtoupper($exp);
         if (isset($this->exp[$exp])) {
             $exp = $this->exp[$exp];
         }
