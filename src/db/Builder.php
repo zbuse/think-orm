@@ -313,9 +313,10 @@ class Builder extends BaseBuilder
      *
      * @return string
      */
-    protected function parseLike(Query $query, string $key, string $exp, $value, $field, int $bindType, string $logic): string
+    protected function parseLike(Query $query, string $key, string $exp, $value, $field, int $bindType, ?string $logic = null): string
     {
         // 模糊匹配
+        $logic = $logic ?: 'AND';
         if (is_array($value)) {
             $array = [];
             foreach ($value as $item) {
