@@ -293,7 +293,7 @@ class Builder extends BaseBuilder
         // 解析查询表达式
         foreach ($this->parser as $fun => $parse) {
             if (in_array($exp, $parse)) {
-                return $this->$fun($query, $key, $exp, $value, $field, $bindType, $val[2] ?? 'AND');
+                return $this->$fun($query, $key, $exp, $value, $field, $bindType, $param);
             }
         }
 
