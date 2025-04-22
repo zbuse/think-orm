@@ -256,7 +256,7 @@ class Builder extends BaseBuilder
         // 字段分析
         $key = $field ? $this->parseKey($query, $field, true) : '';
 
-        [$exp, $value] = $val;
+        [$exp, $value, $param] = $val;
 
         // 检测操作符
         if (!is_string($exp)) {
