@@ -45,10 +45,10 @@ abstract class Entity implements JsonSerializable, ArrayAccess, Arrayable, Jsona
         $options = $this->getOptions();
 
         if (is_null($model)) {
-            $class = !empty($options['model_class']) ? $options['model_class'] : str_replace('\\entity\\', '\\model\\', static::class);
+            $class = !empty($options['modelClass']) ? $options['modelClass'] : str_replace('\\entity\\', '\\model\\', static::class);
             $model = new $class();
             $model->entity($this);
-            unset($options['model_class']);
+            unset($options['modelClass']);
         }
 
         self::$weakMap[$this] = [
