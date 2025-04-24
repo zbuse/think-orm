@@ -464,6 +464,11 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
         } else {
             $db->where($this->getOrigin());
         }
+
+        if ($this->isForce()) {
+            $db->removeOption('soft_delete');
+        }
+
         return $db;
     }
 
