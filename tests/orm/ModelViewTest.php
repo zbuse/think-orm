@@ -24,8 +24,8 @@ class UserViewModel extends View
     protected function getOptions(): array
     {
         return [
-            'model_class'      => TestUserModel::class,
-            'property_mapping' => [
+            'modelClass'      => TestUserModel::class,
+            'viewMapping' => [
                 'nickname' => 'name',
                 'user_age' => 'age',
                 'email'    => 'profile->email',

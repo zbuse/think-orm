@@ -14,7 +14,7 @@ class TestProfileEntity extends Entity
     protected function getOptions(): array
     {
         return [
-            'model_class' => TestProfileModel::class,
+            'modelClass' => TestProfileModel::class,
         ];
     }
 }
@@ -30,7 +30,7 @@ class TestEntity extends Entity
     protected function getOptions(): array
     {
         return [
-            'model_class' => TestEntityModel::class,
+            'modelClass' => TestEntityModel::class,
         ];
     }
 }

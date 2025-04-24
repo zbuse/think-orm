@@ -417,7 +417,7 @@ class CustomFormatTimeModel extends Model
 class IntegerTimeModel extends Model
 {
     protected $table              = 'test_time_field';
-    protected $timestamp_field    = ['timestamp_field'];
+    protected $timestampField    = ['timestamp_field'];
 }
 
 /**

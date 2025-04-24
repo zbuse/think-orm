@@ -112,8 +112,7 @@ abstract class View extends Entity
         $properties = $this->getOption('view_properties');
         if (empty($properties)) {
             $reflection = new ReflectionClass($this);
-            $options    = $this->getOptions();
-            $mapping    = $options['property_mapping'] ?? [];
+            $mapping    = $this->getOption('viewMapping', []);
             $properties = [];
 
             foreach ($reflection->getProperties() as $property) {
