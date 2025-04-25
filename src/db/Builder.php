@@ -69,7 +69,7 @@ class Builder extends BaseBuilder
             } elseif (is_null($val) && in_array($key, $fields, true)) {
                 $result[$item] = 'NULL';
                 continue;
-            } elseif (!is_scalar($val) && (in_array($key, (array) $query->getOptions('json')) || 'json' == $query->getFieldType($key))) {
+            } elseif (!is_scalar($val) && (in_array($key, (array) $query->getOption('json')) || 'json' == $query->getFieldType($key))) {
                 $val = json_encode($val);
             }
 

@@ -67,9 +67,9 @@ trait WhereQuery
      */
     protected function parseQueryWhere(BaseQuery $query): void
     {
-        $this->options['where'] = $query->getOptions('where') ?? [];
+        $this->options['where'] = $query->getOption('where', []);
 
-        $via = $query->getOptions('via');
+        $via = $query->getOption('via');
         if ($via) {
             foreach ($this->options['where'] as $logic => &$where) {
                 foreach ($where as $key => &$val) {

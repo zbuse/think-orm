@@ -175,7 +175,7 @@ abstract class BaseQuery
         }
 
         if (isset($this->options['field_type'])) {
-            $query->setFieldType($this->options['field_type']);
+            $query->schema($this->options['field_type']);
         }
 
         if (isset($this->options['lazy_fields'])) {
@@ -265,7 +265,7 @@ abstract class BaseQuery
             return $id;
         }
 
-        return $this->getOptions('key');
+        return $this->getOption('key');
     }
 
     /**
@@ -302,13 +302,14 @@ abstract class BaseQuery
     /**
      * 设置字段类型信息.
      *
-     * @param array $type 字段类型信息
+     * @param string $field 字段
+     * @param string $type 字段类型
      *
      * @return $this
      */
-    public function setFieldType(array $type)
+    public function setFieldType(string $field, string $type)
     {
-        $this->options['field_type'] = $type;
+        $this->options['field_type'][$field] = $type;
 
         return $this;
     }
@@ -640,25 +641,6 @@ abstract class BaseQuery
     }
 
     /**
-     * 去除查询参数.
-     *
-     * @param string $option 参数名 留空去除所有参数
-     *
-     * @return $this
-     */
-    public function removeOption(string $option = '')
-    {
-        if ('' === $option) {
-            $this->options = [];
-            $this->bind    = [];
-        } elseif (isset($this->options[$option])) {
-            unset($this->options[$option]);
-        }
-
-        return $this;
-    }
-
-    /**
      * 指定查询数量.
      *
      * @param int      $offset 起始位置
@@ -970,7 +952,7 @@ abstract class BaseQuery
         $key = $key ?: $this->getPk();
 
         if (is_null($sort)) {
-            $order = $this->getOptions('order');
+            $order = $this->getOption('order');
             if (!empty($order)) {
                 $sort = $order[$key] ?? 'desc';
             } else {
@@ -1215,19 +1197,26 @@ abstract class BaseQuery
     }
 
     /**
-     * 获取当前的查询参数.
-     *
-     * @param string $name 参数名
+     * 获取所有查询参数.
      *
      * @return mixed
      */
-    public function getOptions(string $name = '')
+    public function getOptions(): array
     {
-        if ('' === $name) {
-            return $this->options;
-        }
+        return $this->options;
+    }
 
-        return $this->options[$name] ?? null;
+    /**
+     * 获取查询参数.
+     *
+     * @param string $name 参数名
+     * @param mixed  $default 默认值
+     *
+     * @return mixed
+     */
+    public function getOption(string $name, $default = null)
+    {
+        return $this->options[$name] ?? $default;
     }
 
     /**
@@ -1241,6 +1230,25 @@ abstract class BaseQuery
     public function setOption(string $option, $value)
     {
         $this->options[$option] = $value;
+
+        return $this;
+    }
+
+    /**
+     * 去除查询参数.
+     *
+     * @param string $option 参数名 留空去除所有参数
+     *
+     * @return $this
+     */
+    public function removeOption(string $option = '')
+    {
+        if ('' === $option) {
+            $this->options = [];
+            $this->bind    = [];
+        } elseif (isset($this->options[$option])) {
+            unset($this->options[$option]);
+        }
 
         return $this;
     }

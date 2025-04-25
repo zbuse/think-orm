@@ -292,7 +292,7 @@ class MorphMany extends Relation
             $closure($this->query);
         }
 
-        $withLimit = $this->query->getOptions('limit');
+        $withLimit = $this->query->getOption('limit');
         if ($withLimit) {
             $this->query->removeOption('limit');
         }

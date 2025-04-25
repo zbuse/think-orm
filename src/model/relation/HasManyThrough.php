@@ -252,7 +252,7 @@ class HasManyThrough extends Relation
             $throughKey = Str::snake(class_basename($this->model)) . '.' . $this->throughKey;
         }
 
-        $withLimit = $this->query->getOptions('limit');
+        $withLimit = $this->query->getOption('limit');
         if ($withLimit) {
             $this->query->removeOption('limit');
         }
