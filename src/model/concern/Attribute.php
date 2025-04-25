@@ -193,18 +193,14 @@ trait Attribute
     /**
      * 数据读取 类型转换.
      *
-     * @param mixed        $value 值
-     * @param string|arrau $type  要转换的类型
+     * @param mixed             $value 值
+     * @param string|array|null $type  要转换的类型
      *
      * @return mixed
      */
-    protected function readTransform($value, string | array $type)
+    protected function readTransform($value, string | array | null $type)
     {
-        if (is_null($value)) {
-            return;
-        }
-
-        if ($value instanceof Raw || $value instanceof Express) {
+        if (is_null($type) || is_null($value) || $value instanceof Raw || $value instanceof Express) {
             return $value;
         }
 
@@ -258,18 +254,14 @@ trait Attribute
     /**
      * 数据写入 类型转换.
      *
-     * @param mixed        $value 值
-     * @param string|array $type  要转换的类型
+     * @param mixed             $value 值
+     * @param string|array|null $type  要转换的类型
      *
      * @return mixed
      */
-    protected function writeTransform($value, string | array $type)
+    protected function writeTransform($value, string | array | null $type)
     {
-        if (null === $value) {
-            return;
-        }
-
-        if ($value instanceof Raw || $value instanceof Express) {
+        if (is_null($type) || is_null($value) || $value instanceof Raw || $value instanceof Express) {
             return $value;
         }
 
