@@ -90,7 +90,7 @@ trait DbConnect
                 // 获取数据表信息
                 $db     = $this->initDb();
                 $fields = $db->getFieldsType();
-                $schema = array_merge($fields, $this->getOption('type', $db->getType()));
+                $schema = array_merge($fields, $this->getOption('type', []));
                 // 获取主键和自增字段
                 if (!$this->getOption('pk')) {
                     $this->setOption('pk', $db->getPk());
