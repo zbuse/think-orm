@@ -385,8 +385,7 @@ trait Attribute
      */
     public function hasData(string $name): bool
     {
-        $name = $this->getRealFieldName($name);
-        return array_key_exists($name, self::$weakMap[$this]['data']);
+        return $this->hasGetAttr($name) || array_key_exists($name, self::$weakMap[$this]['data']);
     }
 
     /**
@@ -505,6 +504,20 @@ trait Attribute
     {
         $attr   = Str::studly($name);
         $method = 'set' . $attr . 'Attr';
+        return method_exists($this, $method);
+    }
+
+    /**
+     * 字段是否定义获取器
+     *
+     * @param string $name  名称
+     *
+     * @return bool
+     */
+    protected function hasGetAttr(string $name): bool
+    {
+        $attr   = Str::studly($name);
+        $method = 'get' . $attr . 'Attr';
         return method_exists($this, $method);
     }
 
