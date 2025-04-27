@@ -378,6 +378,18 @@ trait Attribute
     }
 
     /**
+     * 判断模型是否存在数据字段.
+     *
+     * @param string $name 字段名
+     * @return bool
+     */
+    public function hasData(string $name): bool
+    {
+        $name = $this->getRealFieldName($name);
+        return array_key_exists($name, self::$weakMap[$this]['data']);
+    }
+
+    /**
      * 设置数据对象的实际值
      *
      * @param string $name  名称

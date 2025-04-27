@@ -93,10 +93,20 @@ abstract class View extends Entity
     private function fetchViewAttr(string $field)
     {
         $method = 'get' . Str::camel($field) . 'Attr';
+        $model  = $this->model();
         if (method_exists($this, $method)) {
-            $value = $this->$method($this->model()); 
-        } else {
-            $value = $this->model()->$field;
+            $value = $this->$method($model); 
+        } elseif ($model->hasData($field)) {
+            $value = $model->$field;
+        } elseif ($this->getOption('autoMapping')) {
+            $relations = $this->getOption('autoMapping', []);
+            $value     = null;
+            foreach ($relations as $relation) {
+                if (isset($model->$relation->$field)) {
+                    $value = $model->$relation->$field;
+                    break;
+                }
+            }
         }
 
         return $value;
