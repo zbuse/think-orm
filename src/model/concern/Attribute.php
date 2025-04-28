@@ -63,10 +63,9 @@ trait Attribute
                 continue;
             }
 
-            $trueName = $this->getMappingName($name, $fromSave);
-            $type     = $schema[$fromSave ? $trueName : $name] ?? 'string';
-
+            $trueName = $fromSave ? $this->getMappingName($name) : $name;
             if (in_array($trueName, $fields)) {
+                $type = $schema[$trueName] ?? 'string';
                 // 读取数据后进行类型转换
                 if (!$fromSave || !$this->hasSetAttr($trueName)) {
                     $value = $this->readTransform($value, $type);
@@ -459,7 +458,7 @@ trait Attribute
      */
     public function set(string $name, $value)
     {
-        $name = $this->getMappingName($name, true);
+        $name = $this->getMappingName($name);
         $type = $this->getFields()[$name] ?? '';
 
         if ($this->isExists() && in_array($name, $this->getOption('readonly'))) {
@@ -557,7 +556,7 @@ trait Attribute
      */
     public function get(string $name, bool $attr = true)
     {
-        $name = $this->getMappingName($name, false);
+        $name = $this->getMappingName($name);
         if ($attr && $value = $this->getWeakData('get', $name)) {
             // 已经输出的数据直接返回
             return $value;
@@ -583,18 +582,13 @@ trait Attribute
      * 获取映射字段
      *
      * @param string $name 名称
-     * @param bool   $set  读取或写入
      *
      * @return string
      */
-    protected function getMappingName(string $name, bool $set = true): string
+    protected function getMappingName(string $name): string
     {
         $mapping = $this->getOption('mapping');
-        if (!$set && array_search($name, $mapping)) {
-            // 读取字段映射
-            $name = array_search($name, $mapping);
-        } elseif ($set && isset($mapping[$name])) {
-            // 写入字段映射
+        if (isset($mapping[$name])) {
             $name = $mapping[$name];
         } else {
             $name = $this->getRealFieldName($name);
