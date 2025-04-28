@@ -74,7 +74,7 @@ abstract class View extends Entity
                     // 存在关联数据
                     $value    = $data[$relation];
                     foreach ($items as $item) {
-                        $value = $value->$item;
+                        $value = is_array($value) ? $value[$item] : $value->$item;
                     }
                     $this->$key = $value;
                 }
