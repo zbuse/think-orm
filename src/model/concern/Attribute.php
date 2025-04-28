@@ -370,7 +370,7 @@ trait Attribute
      */
     public function hasData(string $name): bool
     {
-        return $this->hasGetAttr($name) || array_key_exists($name, self::$weakMap[$this]['data']);
+        return $this->hasGetAttr($name) || array_key_exists($this->getMappingName($name), self::$weakMap[$this]['data']);
     }
 
     /**
