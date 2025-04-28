@@ -63,22 +63,8 @@ trait Attribute
                 continue;
             }
 
-            if (!empty($mapping)) {
-                $key = array_search($name, $mapping);
-                if (!$fromSave && $key) {
-                    $trueName = $key;
-                    $type     = $schema[$name] ?? 'string';
-                } elseif ($fromSave && isset($mapping[$name])) {
-                    $trueName = $mapping[$name];
-                    $type     = $schema[$trueName] ?? 'string';
-                } else {
-                    $trueName = $this->getRealFieldName($name);
-                    $type     = $schema[$trueName] ?? 'string';
-                }
-            } else {
-                $trueName = $this->getRealFieldName($name);
-                $type     = $schema[$trueName] ?? 'string';
-            }
+            $trueName = $this->getMappingName($name, $fromSave);
+            $type     = $schema[$fromSave ? $trueName : $name] ?? 'string';
 
             if (in_array($trueName, $fields)) {
                 // 读取数据后进行类型转换
@@ -473,7 +459,7 @@ trait Attribute
      */
     public function set(string $name, $value)
     {
-        $name = $this->getMappingName($name);
+        $name = $this->getMappingName($name, true);
         $type = $this->getFields()[$name] ?? '';
 
         if ($this->isExists() && in_array($name, $this->getOption('readonly'))) {
@@ -571,7 +557,7 @@ trait Attribute
      */
     public function get(string $name, bool $attr = true)
     {
-        $name = $this->getMappingName($name);
+        $name = $this->getMappingName($name, false);
         if ($attr && $value = $this->getWeakData('get', $name)) {
             // 已经输出的数据直接返回
             return $value;
@@ -597,16 +583,23 @@ trait Attribute
      * 获取映射字段
      *
      * @param string $name 名称
+     * @param bool   $set  读取或写入
      *
      * @return string
      */
-    protected function getMappingName(string $name): string
+    protected function getMappingName(string $name, bool $set = true): string
     {
         $mapping = $this->getOption('mapping');
-        if (!empty($mapping)) {
-            $name = array_search($name, $mapping) ?: $name;
+        if (!$set && array_search($name, $mapping)) {
+            // 读取字段映射
+            $name = array_search($name, $mapping);
+        } elseif ($set && isset($mapping[$name])) {
+            // 写入字段映射
+            $name = $mapping[$name];
+        } else {
+            $name = $this->getRealFieldName($name);
         }
-        return $this->getRealFieldName($name);
+        return $name;
     }
 
     /**

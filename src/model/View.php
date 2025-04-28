@@ -102,7 +102,7 @@ abstract class View extends Entity
             $relations = $this->getOption('autoMapping', []);
             $value     = null;
             foreach ($relations as $relation) {
-                if (isset($model->$relation->$field)) {
+                if ($model->$relation->hasData($field)) {
                     $value = $model->$relation->$field;
                     break;
                 }
