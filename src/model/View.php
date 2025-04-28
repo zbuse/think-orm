@@ -147,13 +147,65 @@ abstract class View extends Entity
      */
     public function toArray(): array
     {
-        $data = get_object_vars($this);
+        $data = $this->getData();
         foreach ($data as $name => &$val) {
             if ($val instanceof Modelable || $val instanceof Collection) {
                 $val = $val->toArray();
             }
         }
         return $data;
+    }
+
+    /**
+     * 获取视图模型数据
+     *
+     * @return array
+     */
+    protected function getData(): array
+    {
+        $reflection = new ReflectionClass($this);
+        $data       = [];
+        foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+            $field        = $property->getName();
+            $data[$field] = $this->$field;
+        }
+        return $data;
+    }
+
+    /**
+     * 设置需要附加的输出属性.（视图模型下无效）
+     *
+     * @param array $append 属性列表
+     *
+     * @return $this
+     */
+    public function append(array $append)
+    {
+        return $this;
+    }
+
+    /**
+     * 设置需要隐藏的输出属性.（视图模型下无效）
+     *
+     * @param array $hidden 属性列表
+     *
+     * @return $this
+     */
+    public function hidden(array $hidden)
+    {
+        return $this;
+    }
+
+    /**
+     * 设置需要输出的属性.（视图模型下无效）
+     *
+     * @param array $visible
+     *
+     * @return $this
+     */
+    public function visible(array $visible)
+    {
+        return $this;
     }
 
     /**
