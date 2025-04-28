@@ -14,6 +14,7 @@ declare (strict_types = 1);
 namespace think\model;
 
 use ReflectionClass;
+use ReflectionProperty;
 use think\Entity;
 use think\helper\Str;
 use think\Model;
@@ -125,7 +126,7 @@ abstract class View extends Entity
             $mapping    = $this->getOption('viewMapping', []);
             $properties = [];
 
-            foreach ($reflection->getProperties() as $property) {
+            foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
                 $field = $property->getName();
                 if (isset($mapping[$field])) {
                     $properties[$field] = $mapping[$field];
