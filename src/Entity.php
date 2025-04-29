@@ -48,7 +48,6 @@ abstract class Entity implements JsonSerializable, ArrayAccess, Arrayable, Jsona
             $class = !empty($options['modelClass']) ? $options['modelClass'] : str_replace('\\entity\\', '\\model\\', static::class);
             $model = new $class();
             $model->entity($this);
-            unset($options['modelClass']);
         }
 
         self::$weakMap[$this] = [
@@ -137,6 +136,12 @@ abstract class Entity implements JsonSerializable, ArrayAccess, Arrayable, Jsona
         return self::$weakMap[$this]['model'];
     }
 
+    /**
+     *  设置模型.
+     *
+     * @param Model $model 模型对象
+     * @return void
+     */
     public function setModel($model)
     {
         self::$weakMap[$this]['model'] = $model;

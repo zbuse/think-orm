@@ -535,7 +535,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
     }
 
     /**
-     * 是否为视图模型（不能写入 也不会绑定模型）.
+     * 是否为视图模型（不能写入）.
      *
      * @return bool
      */
@@ -549,7 +549,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      *
      * @return static
      */
-    public function refresh(): static
+    public function refresh()
     {
         if ($this->isExists()) {
             $data = $this->db()->find($this->getKey())->getData();
