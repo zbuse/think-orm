@@ -154,11 +154,16 @@ abstract class BaseQuery
     /**
      * 创建一个新的查询对象
      *
+     * @param string|null $class 查询对象类名
      * @return BaseQuery
      */
-    public function newQuery(): BaseQuery
+    public function newQuery(?string $class = null): BaseQuery
     {
-        $query = new static($this->connection);
+        if (null === $class) {
+            $query = new static($this->connection);
+        } else {
+            $query = new $class($this->connection);
+        }
 
         if ($this->model) {
             $query->model($this->model);

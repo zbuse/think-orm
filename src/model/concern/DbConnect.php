@@ -34,7 +34,7 @@ trait DbConnect
      */
     public function getQuery()
     {
-        $db = $this->initDb()->newQuery();
+        $db = $this->initDb()->newQuery($this->getOption('query'));
 
         if ($this->getOption('cache')) {
             [$key, $expire, $tag] = $this->getOption('cache');
