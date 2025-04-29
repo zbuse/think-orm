@@ -588,12 +588,7 @@ trait Attribute
     protected function getMappingName(string $name): string
     {
         $mapping = $this->getOption('mapping');
-        if (isset($mapping[$name])) {
-            $name = $mapping[$name];
-        } else {
-            $name = $this->getRealFieldName($name);
-        }
-        return $name;
+        return array_search($name, $mapping) ?: $this->getRealFieldName($name);
     }
 
     /**
