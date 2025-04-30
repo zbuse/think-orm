@@ -134,7 +134,7 @@ trait Conversion
                 $item[$name] = $this->getWithAttr($name, $val, $data);
             }
 
-            if (isset($item[$name]) && $key = $this->getWeakData('mapping', $name)) {
+            if (array_key_exists($name, $item) && $key = $this->getWeakData('mapping', $name)) {
                 // 检查字段映射
                 $item[$key] = $item[$name];
                 unset($item[$name]);

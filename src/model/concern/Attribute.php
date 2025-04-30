@@ -45,8 +45,7 @@ trait Attribute
         // 分析数据
         $data    = $this->parseData($data);
         $schema  = $this->getFields();
-        $mapping = $this->getOption('mapping');
-        $fields  = array_keys(array_merge($schema, $mapping));
+        $fields  = array_keys($schema);
 
         // 模型赋值
         foreach ($data as $name => $value) {
