@@ -142,7 +142,7 @@ abstract class Entity implements JsonSerializable, ArrayAccess, Arrayable, Jsona
      * @param Model $model 模型对象
      * @return void
      */
-    public function setModel($model)
+    public function setModel(Model $model)
     {
         self::$weakMap[$this]['model'] = $model;
     }
