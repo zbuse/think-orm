@@ -610,7 +610,7 @@ trait Attribute
         } elseif (method_exists($this, $method)) {
             // 获取器
             $value = $this->$method($value, $data);
-        } elseif ($value instanceof Typeable || is_subclass_of($value, EnumTransform::class)) {
+        } elseif ($value instanceof Typeable || is_subclass_of($value, EnumTransform::class, false)) {
             // 类型自动转换
             $value = $value->value();
         } elseif (is_int($value) && $this->isTimeAttr($name) && false != $this->getDateFormat()) {

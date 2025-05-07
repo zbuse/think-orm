@@ -430,8 +430,8 @@ class Builder extends BaseBuilder
             $value = $this->parseRaw($query, $value);
         } else {
             // 检查枚举类型
-            if (is_subclass_of($value, UnitEnum::class)) {
-                if (is_subclass_of($value, BackedEnum::class)) {
+            if (is_subclass_of($value, UnitEnum::class, false)) {
+                if (is_subclass_of($value, BackedEnum::class, false)) {
                     $value = array_column($value::cases(), 'value');
                 } else {
                     $value = array_column($value::cases(), 'name');
