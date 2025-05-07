@@ -80,6 +80,11 @@ trait AutoWriteData
         }
     }
 
+    public function getAutoTimeFields(): array
+    {
+        return [$this->getOption('createTime'), $this->getOption('updateTime')];
+    }
+
     /**
      * 获取当前时间.
      *

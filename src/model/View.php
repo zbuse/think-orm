@@ -36,8 +36,10 @@ abstract class View extends Entity
     {
         parent::__construct($model);
 
-        // 设置为视图模型
-        $this->model()->asView(true);
+        if (!$this->getOption('allowWrite', false)) {
+            // 设置为视图模型
+            $this->model()->asView(true);
+        }
 
         // 初始化模型
         if (!$this->isEmpty()) {
@@ -285,6 +287,45 @@ abstract class View extends Entity
     }
 
     /**
+     * 视图模型数据转换为模型数据（用于写入）.
+     *
+     * @return array
+     */
+    protected function convertData(): array
+    {
+        // 获取实体属性
+        $properties = $this->getEntityProperties();
+        $data       = $this->getData();
+        $item       = [];
+        foreach ($properties as $key => $field) {
+            if (strpos($field, '->')) {
+                [$relation, $field]      = explode('->', $field);
+                $item[$relation][$field] = $data[$key];
+            } else {
+                $item[$field] =  $data[is_int($key) ? $field : $key];
+            }
+        }
+        return $item;
+    }
+
+    /**
+     * 保存模型实例数据.
+     *
+     * @return bool
+     */
+    public function save(): bool
+    {
+        // 根据映射关系转换为实际模型数据
+        $data = $this->convertData();
+        // 处理自动时间字段数据
+        foreach ($this->model()->getAutoTimeFields() as $field) {
+            unset($data[$field]);
+        }
+
+        return $this->model()->save($data);
+    }
+
+    /**
      * 获取属性 支持获取器
      *
      * @param string $name 名称
@@ -359,7 +400,7 @@ abstract class View extends Entity
      */
     public function __serialize(): array
     {
-        return get_object_vars($this);
+        return $this->getData();
     }
 
     /**
