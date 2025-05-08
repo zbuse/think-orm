@@ -15,7 +15,6 @@ namespace think;
 
 use ArrayAccess;
 use Closure;
-use InvalidArgumentException;
 use JsonSerializable;
 use think\contract\Arrayable;
 use think\contract\Jsonable;
@@ -320,21 +319,16 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      * @param array $data 数据
      * @param array $allow 需要验证的字段
      *
-     * @throws InvalidArgumentException
+     * @throws ValidateException
      * @return void
      */
     protected function validate(array $data, array $allow = []): void
     {
         $validater = $this->getOption('validate');
-        if (!empty($validater) && class_exists('think\validate')) {
-            try {
-                validate($validater)
-                    ->only($allow ?: array_keys($data))
-                    ->check($data);
-            } catch (ValidateException $e) {
-                // 验证失败 输出错误信息
-                throw new InvalidArgumentException($e->getError());
-            }
+        if (!empty($validater)) {
+            validate($validater)
+                ->only($allow ?: array_keys($data))
+                ->check($data);
         }
     }
 

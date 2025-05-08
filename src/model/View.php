@@ -13,7 +13,6 @@ declare (strict_types = 1);
 
 namespace think\model;
 
-use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionProperty;
 use think\Entity;
@@ -324,23 +323,19 @@ abstract class View extends Entity
      * @param array $data 数据
      * @param array $allow 需要验证的字段
      *
-     * @throws InvalidArgumentException
+     * @throws ValidateException
      * @return array
      */
     protected function validate(array $data = [], array $allow = []): array
     {
         $validater = $this->getOption('validate');
-        if (!empty($validater) && class_exists('think\validate')) {
-            $data  = $data ?: $this->getData();
-            try {
-                return validate($validater)
-                    ->only($allow ?: array_keys($data))
-                    ->checked($data);
-            } catch (ValidateException $e) {
-                // 验证失败 输出错误信息
-                throw new InvalidArgumentException($e->getError());
-            }
+        $data      = $data ?: $this->getData();
+        if (!empty($validater)) {
+            return validate($validater)
+                ->only($allow ?: array_keys($data))
+                ->checked($data);
         }
+        return $data;
     }
 
     /**
