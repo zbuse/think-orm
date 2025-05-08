@@ -57,7 +57,7 @@ abstract class View extends Entity
     public function initData(bool $relation = true)
     {
         // 获取实体属性
-        $properties = $this->getEntityProperties();
+        $properties = $this->getEntityPropertiesMap();
         $data       = $this->model()->getData();
         foreach ($properties as $key => $field) {
             if (!$relation) {
@@ -127,20 +127,34 @@ abstract class View extends Entity
      */
     private function getEntityProperties(): array
     {
+        $reflection = new ReflectionClass($this);
+        $properties = [];
+        foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+            $properties[] = $property->getName();
+        }
+        return $properties;
+    }
+
+    /**
+     * 获取包含映射关系的实体属性列表.
+     *
+     * @return array
+     */
+    private function getEntityPropertiesMap(): array
+    {
         $properties = $this->getOption('view_properties');
         if (empty($properties)) {
-            $reflection = new ReflectionClass($this);
+            $fields     = $this->getEntityProperties();
             $mapping    = $this->getOption('viewMapping', []);
             $properties = [];
-
-            foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
-                $field = $property->getName();
+            foreach ($fields as $field) {
                 if (isset($mapping[$field])) {
                     $properties[$field] = $mapping[$field];
                 } else {
                     $properties[] = $field;
                 }
             }
+
             $this->setOption('view_properties', $properties);
         }
 
@@ -164,16 +178,30 @@ abstract class View extends Entity
     }
 
     /**
+     * 设置视图模型数据
+     *
+     * @param array $data 数据
+     * @return $this
+     */
+    public function data(array $data)
+    {
+        // 数据验证
+        $data = $this->validate($data);
+        foreach ($this->getEntityProperties() as $field) {
+            $this->$field = $data[$field] ?? null;
+        }
+        return $this;
+    }
+
+    /**
      * 获取视图模型数据
      *
      * @return array
      */
     protected function getData(): array
     {
-        $reflection = new ReflectionClass($this);
-        $data       = [];
-        foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
-            $field        = $property->getName();
+        $data = [];
+        foreach ($this->getEntityProperties() as $field) {
             $data[$field] = $this->$field;
         }
         return $data;
@@ -299,7 +327,7 @@ abstract class View extends Entity
     protected function convertData(): array
     {
         // 获取实体属性
-        $properties = $this->getEntityProperties();
+        $properties = $this->getEntityPropertiesMap();
         $mapping    = $this->getOption('autoMappingAlias', []);
         $data       = $this->getData();
         $item       = [];
