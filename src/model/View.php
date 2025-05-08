@@ -13,9 +13,11 @@ declare (strict_types = 1);
 
 namespace think\model;
 
+use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionProperty;
 use think\Entity;
+use think\exception\ValidateException;
 use think\helper\Str;
 use think\Model;
 use think\model\Collection;
@@ -314,6 +316,31 @@ abstract class View extends Entity
             }
         }
         return $item;
+    }
+
+    /**
+     * 验证视图模型数据. 
+     *
+     * @param array $data 数据
+     * @param array $allow 需要验证的字段
+     *
+     * @throws InvalidArgumentException
+     * @return array
+     */
+    protected function validate(array $data = [], array $allow = []): array
+    {
+        $validater = $this->getOption('validate');
+        if (!empty($validater) && class_exists('think\validate')) {
+            $data  = $data ?: $this->getData();
+            try {
+                return validate($validater)
+                    ->only($allow ?: array_keys($data))
+                    ->checked($data);
+            } catch (ValidateException $e) {
+                // 验证失败 输出错误信息
+                throw new InvalidArgumentException($e->getError());
+            }
+        }
     }
 
     /**
