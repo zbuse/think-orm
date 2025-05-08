@@ -308,12 +308,18 @@ abstract class Entity implements JsonSerializable, ArrayAccess, Arrayable, Jsona
             $db = $entity->model()->db();
         }
 
+        if ('with' != $method && !empty(self::$weakMap[$entity]['autoMapping'])) {
+            // 自动关联查询
+            $db->with(self::$weakMap[$entity]['autoMapping']);
+        }
+
         return call_user_func_array([$db, $method], $args);
     }
 
     public function __call($method, $args)
     {
         // 调用Model类方法
-        return call_user_func_array([$this->model(), $method], $args);
+        $result = call_user_func_array([$this->model(), $method], $args);
+        return $result instanceof Model ? $this : $result;
     }
 }

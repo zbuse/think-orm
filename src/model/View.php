@@ -106,7 +106,11 @@ abstract class View extends Entity
             $value     = null;
             foreach ($relations as $relation) {
                 if ($model->$relation->hasData($field)) {
-                    $value = $model->$relation->$field;
+                    $value   = $model->$relation->$field;
+                    $mapping = $this->getOption('autoMappingAlias', []);
+
+                    $mapping[$field] = $relation . '->' . $field;
+                    $this->setOption('autoMappingAlias', $mapping);
                     break;
                 }
             }
@@ -295,12 +299,16 @@ abstract class View extends Entity
     {
         // 获取实体属性
         $properties = $this->getEntityProperties();
+        $mapping    = $this->getOption('autoMappingAlias', []);
         $data       = $this->getData();
         $item       = [];
         foreach ($properties as $key => $field) {
             if (strpos($field, '->')) {
                 [$relation, $field]      = explode('->', $field);
                 $item[$relation][$field] = $data[$key];
+            } elseif (is_int($key) && isset($mapping[$field])) {
+                [$relation] = explode('->', $mapping[$field]);
+                $this->model()->$relation->$field = $data[$field];
             } else {
                 $item[$field] =  $data[is_int($key) ? $field : $key];
             }
