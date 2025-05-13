@@ -98,13 +98,13 @@ abstract class View extends Entity
     {
         $method = 'get' . Str::camel($field) . 'Attr';
         $model  = $this->model();
-        $value  = null;
         if (method_exists($this, $method)) {
             $value = $this->$method($model); 
         } elseif ($model->hasData($field)) {
             $value = $model->$field;
-        } elseif ($this->getOption('autoMapping')) {
+        } else {
             $relations = $this->getOption('autoMapping', []);
+            $value     = null;
             foreach ($relations as $relation) {
                 if ($model->$relation->hasData($field)) {
                     $value   = $model->$relation->$field;
