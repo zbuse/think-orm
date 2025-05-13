@@ -331,21 +331,30 @@ abstract class View extends Entity
         $mapping    = $this->getOption('autoMappingAlias', []);
         $data       = $this->getData();
         $item       = [];
+        $together   = [];
         foreach ($properties as $key => $field) {
             if (strpos($field, '->')) {
-                $fields = explode('->', $field);
-                $last   = array_pop($fields);
-                $target = $this->model();
+                $fields     = explode('->', $field);
+                $together[] = current($fields);
+                $last       = array_pop($fields);
+                $target     = $this->model();
                 foreach ($fields as $attr) {
                     $target = $target->$attr;
                 }
                 $target->$last = $data[$key];
             } elseif (is_int($key) && isset($mapping[$field])) {
                 [$relation] = explode('->', $mapping[$field]);
+                $together[] = $relation;
                 $this->model()->$relation->$field = $data[$field];
             } else {
                 $item[$field] =  $data[is_int($key) ? $field : $key];
             }
+        }
+
+        if (!empty($together)) {
+            // 自动关联写入
+            $together = array_unique($together);
+            $this->model()->together($together);
         }
         return $item;
     }
@@ -378,6 +387,10 @@ abstract class View extends Entity
      */
     public function save(): bool
     {
+        if (!$this->getOption('allowWrite', false)) {
+            return false;
+        }
+
         // 根据映射关系转换为实际模型数据
         $data = $this->convertData();
         // 处理自动时间字段数据
