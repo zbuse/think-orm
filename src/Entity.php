@@ -319,7 +319,6 @@ abstract class Entity implements JsonSerializable, ArrayAccess, Arrayable, Jsona
     public function __call($method, $args)
     {
         // 调用Model类方法
-        $result = call_user_func_array([$this->model(), $method], $args);
-        return $result instanceof Model ? $this : $result;
+        return call_user_func_array([$this->model(), $method], $args);
     }
 }

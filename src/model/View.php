@@ -98,13 +98,13 @@ abstract class View extends Entity
     {
         $method = 'get' . Str::camel($field) . 'Attr';
         $model  = $this->model();
+        $value  = null;
         if (method_exists($this, $method)) {
             $value = $this->$method($model); 
         } elseif ($model->hasData($field)) {
             $value = $model->$field;
         } elseif ($this->getOption('autoMapping')) {
             $relations = $this->getOption('autoMapping', []);
-            $value     = null;
             foreach ($relations as $relation) {
                 if ($model->$relation->hasData($field)) {
                     $value   = $model->$relation->$field;
@@ -490,5 +490,12 @@ abstract class View extends Entity
         foreach ($data as $name => $val) {
             $this->$name = $val;
         }
+    }
+
+    public function __call($method, $args)
+    {
+        // 调用Model类方法
+        $result = call_user_func_array([$this->model(), $method], $args);
+        return $result instanceof Model ? $this : $result;
     }
 }
