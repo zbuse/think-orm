@@ -333,8 +333,13 @@ abstract class View extends Entity
         $item       = [];
         foreach ($properties as $key => $field) {
             if (strpos($field, '->')) {
-                [$relation, $field]      = explode('->', $field);
-                $item[$relation][$field] = $data[$key];
+                $fields = explode('->', $field);
+                $attr   = array_pop($fields);
+                $target = $this->model();
+                foreach ($fields as $key) {
+                    $target = $target->$key;
+                }
+                $target->$attr = $data[$key];
             } elseif (is_int($key) && isset($mapping[$field])) {
                 [$relation] = explode('->', $mapping[$field]);
                 $this->model()->$relation->$field = $data[$field];
