@@ -430,7 +430,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
             } elseif ($isUpdate && !$this->isForce() && $this->isNotRequireUpdate($name, $val, $origin)) {
                 unset($data[$name]);
             } else {
-                $val = $this->setWithAttr($name, $val, $data);
+                $val = $this->setWithAttr($name, $val);
             }
         }
 

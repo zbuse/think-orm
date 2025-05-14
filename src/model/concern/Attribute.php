@@ -510,16 +510,15 @@ trait Attribute
      *
      * @param string $name  名称
      * @param mixed  $value 值
-     * @param array  $data 所有数据
      *
      * @return mixed
      */
-    private function setWithAttr(string $name, $value, array $data = [])
+    private function setWithAttr(string $name, $value)
     {
         $attr   = Str::studly($name);
         $method = 'set' . $attr . 'Attr';
         if (method_exists($this, $method)) {
-            $value = $this->$method($value, $data);
+            $value = $this->$method($value, $this->getData());
         } else {
             // 类型转换
             $value = $this->writeTransform($value, $this->getFields($name));
