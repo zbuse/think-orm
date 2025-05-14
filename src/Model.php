@@ -337,9 +337,10 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      *
      * @param array|object $data 数据
      * @param mixed $where 更新条件 true为强制新增
+     * @param bool  $refresh  是否刷新数据
      * @return bool
      */
-    public function save(array | object $data = [], $where = []): bool
+    public function save(array | object $data = [], $where = [], bool $refresh = false): bool
     {
         if (!empty($data)) {
             // 初始化模型数据
@@ -388,6 +389,10 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
         if (!$isUpdate) {
             $this->exists(true);
             $this->setKey($db->getLastInsID());
+        } elseif ($refresh) {
+            // 刷新数据
+            $data = $db->find()->getData();
+            $this->data($data);
         }
         $this->trigger($isUpdate ? 'AfterUpdate' : 'AfterInsert');
         $this->trigger('AfterWrite');
@@ -644,17 +649,13 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      * @param array|object  $data 数据
      * @param mixed  $where       更新条件
      * @param array  $allowField  允许字段
+     * @param bool   $refresh     是否刷新数据
      * @return Modelable
      */
-    public static function update(array | object $data, $where = [], array $allowField = []): Modelable
+    public static function update(array | object $data, $where = [], array $allowField = [], bool $refresh = false): Modelable
     {
         $model  = new static();
-        $result = $model->allowField($allowField)->exists(true)->save($data, $where);
-        if ($result) {
-            // 刷新数据
-            $data = $model->getDbWhere($where)->find()->getData();
-            $model->data($data);
-        }
+        $model->allowField($allowField)->exists(true)->save($data, $where, $refresh);
         return $model->fetchModel($model);
     }
 

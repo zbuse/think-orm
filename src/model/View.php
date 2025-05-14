@@ -466,7 +466,8 @@ abstract class View extends Entity
     public static function update(array | object $data, $where = [], array $allowField = [])
     {
         $entity = new static();
-        $model  = $entity->model()->allowField($allowField)->exists(true)->save($data, $where);
+        $model  = $entity->model()->allowField($allowField)->exists(true)->save($data, $where, true);
+        // 刷新视图模型数据
         $entity->refresh();
 
         return $entity;
