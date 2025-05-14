@@ -140,11 +140,12 @@ abstract class Entity implements JsonSerializable, ArrayAccess, Arrayable, Jsona
      *  设置模型.
      *
      * @param Model $model 模型对象
-     * @return void
+     * @return $this
      */
     public function setModel(Model $model)
     {
         self::$weakMap[$this]['model'] = $model;
+        return $this;
     }
 
     /**
@@ -306,11 +307,6 @@ abstract class Entity implements JsonSerializable, ArrayAccess, Arrayable, Jsona
         } else {
             // 调用Query类查询方法
             $db = $entity->model()->db();
-        }
-
-        if ('with' != $method && !empty(self::$weakMap[$entity]['autoMapping'])) {
-            // 自动关联查询
-            $db->with(self::$weakMap[$entity]['autoMapping']);
         }
 
         return call_user_func_array([$db, $method], $args);

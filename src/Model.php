@@ -651,6 +651,8 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
         $model = new static();
 
         $model->allowField($allowField)->exists(true)->save($data, $where);
+        // 刷新数据
+        $model->refresh();
 
         return $model->fetchModel($model);
     }

@@ -43,9 +43,7 @@ abstract class View extends Entity
         }
 
         // 初始化模型
-        if (!$this->isEmpty()) {
-            $this->initData(!$with);
-        }
+        $this->initData(!$with);
     }
 
     /**
@@ -59,30 +57,32 @@ abstract class View extends Entity
         // 获取实体属性
         $properties = $this->getEntityPropertiesMap();
         $data       = $this->model()->getData();
-        foreach ($properties as $key => $field) {
-            if (!$relation) {
-                // 确保存在基础模型数据
-                if (isset($data[$field])) { 
-                    $this->$field = $data[$field];
-                }
-                continue;
-            }
-
-            if (is_int($key)) {
-                $this->$field = $this->fetchViewAttr($field);
-            } elseif (strpos($field, '->')) {
-                $items    = explode('->', $field);
-                $relation = array_shift($items);
-                if (isset($data[$relation])) {
-                    // 存在关联数据
-                    $value    = $data[$relation];
-                    foreach ($items as $item) {
-                        $value = is_array($value) ? $value[$item] : $value->$item;
+        if (!empty($data)) {
+            foreach ($properties as $key => $field) {
+                if (!$relation) {
+                    // 确保存在基础模型数据
+                    if (isset($data[$field])) { 
+                        $this->$field = $data[$field];
                     }
-                    $this->$key = $value;
+                    continue;
                 }
-            } else {
-                $this->$key = $this->fetchViewAttr($field);
+
+                if (is_int($key)) {
+                    $this->$field = $this->fetchViewAttr($field);
+                } elseif (strpos($field, '->')) {
+                    $items    = explode('->', $field);
+                    $relation = array_shift($items);
+                    if (isset($data[$relation])) {
+                        // 存在关联数据
+                        $value    = $data[$relation];
+                        foreach ($items as $item) {
+                            $value = is_array($value) ? $value[$item] : $value->$item;
+                        }
+                        $this->$key = $value;
+                    }
+                } else {
+                    $this->$key = $this->fetchViewAttr($field);
+                }
             }
         }
     }
@@ -106,7 +106,7 @@ abstract class View extends Entity
             $relations = $this->getOption('autoMapping', []);
             $value     = null;
             foreach ($relations as $relation) {
-                if ($model->$relation->hasData($field)) {
+                if ($model->$relation?->hasData($field)) {
                     $value   = $model->$relation->$field;
                     $mapping = $this->getOption('autoMappingAlias', []);
 
@@ -194,6 +194,19 @@ abstract class View extends Entity
     }
 
     /**
+     * 清空视图模型数据
+     *
+     * @return $this
+     */
+    public function clear()
+    {
+        foreach ($this->getEntityProperties() as $field) {
+            $this->$field = null;
+        }
+        return $this;
+    }
+
+    /**
      * 获取视图模型数据
      *
      * @return array
@@ -261,11 +274,7 @@ abstract class View extends Entity
     public function clone()
     {
         $model = new static();
-        $model->setModel($this->model());
-        // 初始化模型
-        if (!$this->isEmpty()) {
-            $model->initData();
-        }
+        $model->setModel($this->model())->initData();
         return $model;
     }
 
@@ -490,6 +499,72 @@ abstract class View extends Entity
         foreach ($data as $name => $val) {
             $this->$name = $val;
         }
+    }
+
+    /**
+     * 删除模型数据.
+     *
+     * @return bool
+     */
+    public function delete(): bool
+    {
+        if ($this->model()->delete()) {
+            $this->clear();
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 写入数据.
+     *
+     * @param array|object  $data 数据
+     * @return static
+     */
+    public static function create(array | object $data)
+    {
+        $entity = new static();
+        $model  = $entity->model()->exists(false)->create($data);
+        $entity->setModel($model)->initData();
+
+        return $entity;
+    }
+
+    /**
+     * 更新数据.
+     *
+     * @param array|object  $data 数据
+     * @param mixed  $where       更新条件
+     * @param array  $allowField  允许字段
+     * @return static
+     */
+    public static function update(array | object $data, $where = [], array $allowField = [])
+    {
+        $entity = new static();
+        $model  = $entity->model()->update($data, $where, $allowField);
+        $entity->setModel($model)->initData();
+
+        return $entity;
+    }
+
+    public static function __callStatic($method, $args)
+    {
+        $entity = new static();
+        if (in_array($method, ['destroy', 'saveAll'])) {
+            // 调用model的静态方法
+            $db = $entity->model();
+        } else {
+            // 调用Query类查询方法
+            $db = $entity->model()->db();
+        }
+
+        if ('with' != $method && !empty($entity->getOption('autoMapping'))) {
+            // 自动关联查询
+            $db->with($entity->getOption('autoMapping'));
+        }
+
+        return call_user_func_array([$db, $method], $args);
     }
 
     public function __call($method, $args)
