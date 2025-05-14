@@ -510,16 +510,6 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
     }
 
     /**
-     * 是否为虚拟模型（不能查询和写入）.
-     *
-     * @return bool
-     */
-    public function isVirtual(): bool
-    {
-        return false;
-    }
-
-    /**
      * 刷新模型数据.
      *
      * @return static
@@ -607,16 +597,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
     public static function create(array | object $data, array $allowField = [], bool $replace = false): Modelable
     {
         $model = new static();
-
-        if ($model->isVirtual()) {
-            if (!empty($data)) {
-                // 初始化模型数据
-                $model->initializeData($data, true);
-            }
-        } else {
-            $model->allowField($allowField)->replace($replace)->save($data, true);            
-        }
-        
+        $model->allowField($allowField)->replace($replace)->save($data, true);            
         return $model->fetchModel($model);
     }
 
@@ -632,7 +613,6 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
     public static function update(array | object $data, $where = [], array $allowField = [], bool $refresh = false): Modelable
     {
         $model  = new static();
-  
         $model->allowField($allowField)->exists(true)->save($data, $where, $refresh);
         return $model->fetchModel($model);
     }

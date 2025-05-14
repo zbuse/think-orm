@@ -40,7 +40,7 @@ trait Attribute
      *
      * @return void
      */
-    private function initializeData(array | object $data, bool $fromSave = false)
+    protected function initializeData(array | object $data, bool $fromSave = false)
     {
         // 分析数据
         $data    = $this->parseData($data);

@@ -14,7 +14,6 @@ declare (strict_types = 1);
 namespace think\model\concern;
 
 use think\db\BaseQuery as Query;
-use think\db\exception\DbException as Exception;
 use think\facade\Db;
 
 /**
@@ -34,10 +33,6 @@ trait DbConnect
      */
     public function getQuery()
     {
-        if ($this->isVirtual()) {
-            throw new Exception('virtual model not support db query');
-        }
-
         $db = $this->initDb()->newQuery($this->getOption('query'));
 
         if ($this->getOption('cache')) {
@@ -88,20 +83,17 @@ trait DbConnect
     {
         $schema = $this->getOption('schema');
         if (empty($schema)) {
-            if ($this->isVirtual()) {
-                $schema = $this->getOption('type', []);
-            } else {
-                // 获取数据表信息
-                $db     = $this->initDb();
-                $fields = $db->getFieldsType();
-                $schema = array_merge($fields, $this->getOption('type', []));
-                // 获取主键和自增字段
-                if (!$this->getOption('pk')) {
-                    $this->setOption('pk', $db->getPk());
-                }
-                if (!$this->getOption('autoInc')) {
-                    $this->setOption('autoInc', $db->getAutoInc());
-                }
+            // 获取数据表信息
+            $db     = $this->initDb();
+            $fields = $db->getFieldsType();
+            $schema = array_merge($fields, $this->getOption('type', []));
+            // 获取主键和自增字段
+            if (!$this->getOption('pk')) {
+                $this->setOption('pk', $db->getPk());
+            }
+
+            if (!$this->getOption('autoInc')) {
+                $this->setOption('autoInc', $db->getAutoInc());
             }
 
             $this->setOption('schema', $schema);
