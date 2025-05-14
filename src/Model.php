@@ -545,7 +545,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      */
     public function refresh()
     {
-        if ($this->isExists()) {
+        if ($this->isExists() && $this->getKey()) {
             $data = $this->db()->find($this->getKey())->getData();
             $this->data($data);
         }
@@ -648,11 +648,14 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      */
     public static function update(array | object $data, $where = [], array $allowField = []): Modelable
     {
-        $model = new static();
-
-        $model->allowField($allowField)->exists(true)->save($data, $where);
-        // 刷新数据
-        return $model->fetchModel($model->refresh());
+        $model  = new static();
+        $result = $model->allowField($allowField)->exists(true)->save($data, $where);
+        if ($result) {
+            // 刷新数据
+            $data = $model->getDbWhere($where)->find()->getData();
+            $model->data($data);
+        }
+        return $model->fetchModel($model);
     }
 
     /**
