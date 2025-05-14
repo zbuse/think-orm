@@ -24,7 +24,8 @@ class UserViewModel extends View
     protected function getOptions(): array
     {
         return [
-            'modelClass'      => TestUserModel::class,
+            'modelClass'  => TestUserModel::class,
+            'autoMapping' => ['profile'],
             'viewMapping' => [
                 'nickname' => 'name',
                 'user_age' => 'age',
@@ -32,6 +33,11 @@ class UserViewModel extends View
                 'address'  => 'profile->address',
             ],
         ];
+    }
+
+    public function setReadonly(bool $readonly)
+    {
+        return $this->setOption('readonly', $readonly);
     }
 }
 
@@ -141,10 +147,17 @@ SQL
         $this->assertFalse(isset($viewModel->not_exist));
 
         // 测试视图模型写入限制
+        $viewModel->setReadonly(true); // 只读模型
         $viewModel->nickname = 'new_name';
         $viewModel->save();
         $viewModel = UserViewModel::find($user->id);
-        $this->assertEquals('test2', $viewModel->nickname); // 视图模型不允许修改数据
+        $this->assertEquals('test2', $viewModel->nickname); 
+
+        $viewModel->setReadonly(false); // 可写模型
+        $viewModel->nickname = 'new_name';
+        $viewModel->save();
+        $viewModel = UserViewModel::find($user->id);
+        $this->assertEquals('new_name', $viewModel->nickname);         
     }
 
     public function testEmptyViewModel()
@@ -178,7 +191,7 @@ SQL
         ]);
 
         // 加载关联数据
-        $viewModel = UserViewModel::with(['profile'])->find($user->id);
+        $viewModel = UserViewModel::find($user->id);
 
         $this->assertEquals('test3', $viewModel->nickname);
         $this->assertEquals('test_test3', $viewModel->test_name);

@@ -37,8 +37,8 @@ abstract class View extends Entity
     {
         parent::__construct($model);
 
-        if (!$this->getOption('allowWrite', false)) {
-            // 设置为视图模型
+        if ($this->getOption('readonly')) {
+            // 设置为只读视图模型
             $this->model()->asView(true);
         }
 
@@ -189,6 +189,19 @@ abstract class View extends Entity
         $data = $this->validate($data);
         foreach ($this->getEntityProperties() as $field) {
             $this->$field = $data[$field] ?? null;
+        }
+        return $this;
+    }
+
+    /**
+     * 刷新模型数据.
+     *
+     * @return $this
+     */
+    public function refresh()
+    {
+        if ($this->isEmpty()) {
+            $this->initData();
         }
         return $this;
     }
@@ -348,9 +361,11 @@ abstract class View extends Entity
                 $last       = array_pop($fields);
                 $target     = $this->model();
                 foreach ($fields as $attr) {
-                    $target = $target->$attr;
+                    $target = $target?->$attr;
                 }
-                $target->$last = $data[$key];
+                if ($target) {
+                    $target->$last = $data[$key];
+                }
             } elseif (is_int($key) && isset($mapping[$field])) {
                 [$relation] = explode('->', $mapping[$field]);
                 $together[] = $relation;
@@ -396,7 +411,7 @@ abstract class View extends Entity
      */
     public function save(): bool
     {
-        if (!$this->getOption('allowWrite', false)) {
+        if ($this->getOption('readonly')) {
             return false;
         }
 
@@ -408,6 +423,53 @@ abstract class View extends Entity
         }
 
         return $this->model()->save($data);
+    }
+
+    /**
+     * 删除模型数据.
+     *
+     * @return bool
+     */
+    public function delete(): bool
+    {
+        if ($this->model()->delete()) {
+            $this->clear();
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 写入数据.
+     *
+     * @param array|object  $data 数据
+     * @return static
+     */
+    public static function create(array | object $data)
+    {
+        $entity = new static();
+        $model  = $entity->model()->exists(false)->save($data, true);
+        $entity->refresh();
+
+        return $entity;
+    }
+
+    /**
+     * 更新数据.
+     *
+     * @param array|object  $data 数据
+     * @param mixed  $where       更新条件
+     * @param array  $allowField  允许字段
+     * @return static
+     */
+    public static function update(array | object $data, $where = [], array $allowField = [])
+    {
+        $entity = new static();
+        $model  = $entity->model()->allowField($allowField)->exists(true)->save($data, $where);
+        $entity->refresh();
+
+        return $entity;
     }
 
     /**
@@ -499,53 +561,6 @@ abstract class View extends Entity
         foreach ($data as $name => $val) {
             $this->$name = $val;
         }
-    }
-
-    /**
-     * 删除模型数据.
-     *
-     * @return bool
-     */
-    public function delete(): bool
-    {
-        if ($this->model()->delete()) {
-            $this->clear();
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * 写入数据.
-     *
-     * @param array|object  $data 数据
-     * @return static
-     */
-    public static function create(array | object $data)
-    {
-        $entity = new static();
-        $model  = $entity->model()->exists(false)->create($data);
-        $entity->setModel($model)->initData();
-
-        return $entity;
-    }
-
-    /**
-     * 更新数据.
-     *
-     * @param array|object  $data 数据
-     * @param mixed  $where       更新条件
-     * @param array  $allowField  允许字段
-     * @return static
-     */
-    public static function update(array | object $data, $where = [], array $allowField = [])
-    {
-        $entity = new static();
-        $model  = $entity->model()->update($data, $where, $allowField);
-        $entity->setModel($model)->initData();
-
-        return $entity;
     }
 
     public static function __callStatic($method, $args)
