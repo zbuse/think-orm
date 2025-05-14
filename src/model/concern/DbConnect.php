@@ -34,6 +34,10 @@ trait DbConnect
      */
     public function getQuery()
     {
+        if ($this->isVirtual()) {
+            throw new Exception('virtual model not support db query');
+        }
+
         $db = $this->initDb()->newQuery($this->getOption('query'));
 
         if ($this->getOption('cache')) {
@@ -84,7 +88,7 @@ trait DbConnect
     {
         $schema = $this->getOption('schema');
         if (empty($schema)) {
-            if ($this->isView() || $this->isVirtual()) {
+            if ($this->isVirtual()) {
                 $schema = $this->getOption('type', []);
             } else {
                 // 获取数据表信息
@@ -190,12 +194,7 @@ trait DbConnect
     public static function __callStatic($method, $args)
     {
         $model = new static();
-
-        if ($model->isVirtual()) {
-            throw new Exception('virtual model not support db query');
-        }
-
-        $db = $model->db();
+        $db    = $model->db();
 
         if (!empty(self::$weakMap[$model]['autoRelation'])) {
             // 自动获取关联数据

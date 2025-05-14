@@ -347,10 +347,6 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
             $this->initializeData($data, true);
         }
 
-        if ($this->isVirtual() || $this->isView()) {
-            return true;
-        }
-
         if (false === $this->trigger('BeforeWrite')) {
             return false;
         }
@@ -514,33 +510,13 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
     }
 
     /**
-     * 是否为虚拟模型（不能查询）.
+     * 是否为虚拟模型（不能查询和写入）.
      *
      * @return bool
      */
     public function isVirtual(): bool
     {
         return false;
-    }
-
-    /**
-     * 设置为视图模型（不能写入）.
-     *
-     * @return $this
-     */
-    public function asView(bool $isView = true)
-    {
-        return $this->setOption('is_view', $isView);
-    }
-
-    /**
-     * 是否为视图模型（不能写入）.
-     *
-     * @return bool
-     */
-    public function isView(): bool
-    {
-        return $this->getOption('is_view', false);
     }
 
     /**
@@ -596,12 +572,6 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      */
     public function delete(): bool
     {
-        if ($this->isVirtual() || $this->isView()) {
-            $this->exists(false);
-            $this->clear();
-            return true;
-        }
-
         if ($this->isEmpty() || false === $this->trigger('BeforeDelete')) {
             return false;
         }
@@ -638,7 +608,14 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
     {
         $model = new static();
 
-        $model->allowField($allowField)->replace($replace)->save($data, true);
+        if ($model->isVirtual()) {
+            if (!empty($data)) {
+                // 初始化模型数据
+                $model->initializeData($data, true);
+            }
+        } else {
+            $model->allowField($allowField)->replace($replace)->save($data, true);            
+        }
         
         return $model->fetchModel($model);
     }
@@ -655,6 +632,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
     public static function update(array | object $data, $where = [], array $allowField = [], bool $refresh = false): Modelable
     {
         $model  = new static();
+  
         $model->allowField($allowField)->exists(true)->save($data, $where, $refresh);
         return $model->fetchModel($model);
     }
@@ -670,11 +648,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
     public static function destroy($data, bool $force = false): bool
     {
         $model = new static();
-        if ($model->isVirtual() || $model->isView()) {
-            return true;
-        }
-
-        $db = $model->db();
+        $db    = $model->db();
 
         if (is_array($data) && key($data) !== 0) {
             $db->where($data);
@@ -819,9 +793,6 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      */
     public function __isset(string $name): bool
     {
-        if ($this->isView()) {
-            return isset(self::$weakMap[$this]['data'][$name]);
-        }
         return !is_null($this->get($name, false));
     }
 

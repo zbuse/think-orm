@@ -146,14 +146,7 @@ SQL
         $this->assertTrue(isset($viewModel->user_age));
         $this->assertFalse(isset($viewModel->not_exist));
 
-        // 测试视图模型写入限制
-        $viewModel->setReadonly(true); // 只读模型
-        $viewModel->nickname = 'new_name';
-        $viewModel->save();
-        $viewModel = UserViewModel::find($user->id);
-        $this->assertEquals('test2', $viewModel->nickname); 
-
-        $viewModel->setReadonly(false); // 可写模型
+        // 测试视图模型写入
         $viewModel->nickname = 'new_name';
         $viewModel->save();
         $viewModel = UserViewModel::find($user->id);

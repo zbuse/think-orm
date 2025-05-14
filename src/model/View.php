@@ -37,11 +37,6 @@ abstract class View extends Entity
     {
         parent::__construct($model);
 
-        if ($this->getOption('readonly')) {
-            // 设置为只读视图模型
-            $this->model()->asView(true);
-        }
-
         // 初始化模型
         $this->initData(!$with);
     }
@@ -413,10 +408,6 @@ abstract class View extends Entity
      */
     public function save(): bool
     {
-        if ($this->getOption('readonly')) {
-            return false;
-        }
-
         // 根据映射关系转换为实际模型数据
         $data = $this->convertData();
         // 处理自动时间字段数据
