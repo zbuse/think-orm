@@ -24,7 +24,7 @@ use think\model\contract\Modelable;
 abstract class Virtual extends Model
 {
     /**
-     * 写入数据.
+     * 创建数据.
      *
      * @param array|object  $data 数据
      * @param array  $allowField  允许字段
@@ -37,10 +37,9 @@ abstract class Virtual extends Model
 
         if (!empty($data)) {
             // 初始化模型数据
-            $model->initializeData($data, true);
+            $model->data($data);
         }
-        
-        return $model->fetchModel($model);
+        return $model;
     }
 
     /**
@@ -61,7 +60,7 @@ abstract class Virtual extends Model
      */
     protected function getFields(?string $field = null)
     {
-        $schema = $this->getOption('schema', []);
+        $schema = array_merge($this->getOption('schema', []), $this->getOption('type', []));
 
         if ($field) {
             return $schema[$field] ?? null;
