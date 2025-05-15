@@ -453,8 +453,14 @@ trait WhereQuery
     {
         $logic = strtoupper($logic);
 
+        // 字段映射
+        $map   = $this->getOption('field_map', []);
+        if (is_string($field) && isset($map[$field])) {
+            $field = $map[$field];
+        }
+
         // 处理 via
-        if (is_string($field) && !empty($this->options['via']) && !str_contains($field, '.')) {
+        if (is_string($field) && !empty($this->options['via']) && !str_contains($field, '.') && !str_contains($field, '->')) {
             $field = $this->options['via'] . '.' . $field;
         }
 
@@ -522,19 +528,15 @@ trait WhereQuery
             array_unshift($param, $field);
             return $param;
         }
-        // 获取字段映射
-        $alias = $this->getFieldMap($field);
-        if ($alias) {
-            $field = $alias;
-            if (strpos($alias, '->')) {
-                [$relation, $field] = explode('->', $alias, 2);
 
-                $type = $this->getFieldType($relation);
-                if (is_null($type)) {
-                    // 自动关联查询
-                    $this->hasWhere($relation, [[$field , is_null($condition) ? '=' : $op, $condition ?? $op]]);                    
-                    return [];
-                }
+        if (is_string($field) && strpos($field, '->')) {
+            [$relation, $attr] = explode('->', $field, 2);
+
+            $type = $this->getFieldType($relation);
+            if (is_null($type)) {
+                // 自动关联查询
+                $this->hasWhere($relation, [[$attr , is_null($condition) ? '=' : $op, $condition ?? $op]]);                    
+                return [];
             }
         }
 
