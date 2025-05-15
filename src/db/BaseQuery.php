@@ -793,14 +793,24 @@ abstract class BaseQuery
             return $this;
         } elseif ($field instanceof Raw) {
             $this->options['order'][] = $field;
-
             return $this;
         }
 
         if (is_string($field)) {
-            if (!empty($this->options['via'])) {
+            $field = $this->getFieldMap($field) ?: $field;
+            if (!empty($this->options['via']) && !str_contains($field, '.') && !str_contains($field, '->')) {
                 $field = $this->options['via'] . '.' . $field;
             }
+
+            if (is_string($field) && strpos($field, '->')) {
+                [$alias, $attr] = explode('->', $field, 2);
+
+                $type = $this->getFieldType($alias);
+                if (is_null($type)) {
+                    $field = $alias . '.' . $attr;
+                }
+            }
+
             if (str_contains($field, ',')) {
                 $field = array_map('trim', explode(',', $field));
             } else {
