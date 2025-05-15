@@ -634,7 +634,7 @@ trait Attribute
      *
      * @return array|object
      */
-    public function readTransformJson(string $name, Json $value)
+    protected function readTransformJson(string $name, Json $value)
     {
         // JSON数据转换
         $value = $value->value();

@@ -21,7 +21,6 @@ use think\helper\Str;
 use think\Model;
 use think\model\Collection;
 use think\model\contract\Modelable;
-use think\model\type\Json;
 
 /**
  * 视图模型
@@ -70,13 +69,8 @@ abstract class View extends Entity
                     $relation = array_shift($items);
                     if (isset($data[$relation])) {
                         // 存在关联数据
-                        $value = $data[$relation];
+                        $value = $this->model()->$relation;
                         foreach ($items as $item) {
-                            if ($value instanceof Json) {
-                                // JSON字段数据
-                                $value = $this->readTransformJson($relation, $value);
-                            }
-
                             if (is_array($value)) {
                                 $value = $value[$item] ?? null;
                             } elseif (is_object($value)) {
