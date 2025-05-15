@@ -807,6 +807,7 @@ abstract class BaseQuery
 
                 $type = $this->getFieldType($alias);
                 if (is_null($type)) {
+                    $this->hasWhere($alias);
                     $field = $alias . '.' . $attr;
                 }
             }
