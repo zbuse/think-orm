@@ -638,12 +638,14 @@ trait Attribute
     {
         // JSON数据转换
         $value = $value->value();
-        foreach ($value as $key => &$val) {
-            $type = $this->getFields($name . '->' . $key);
-            if ($type) {
-                // 定义了JSON属性类型自动转换
-                $val  = $this->readTransform($val, $type);
-            }
+        if ($value) {
+            foreach ($value as $key => &$val) {
+                $type = $this->getFields($name . '->' . $key);
+                if ($type) {
+                    // 定义了JSON属性类型自动转换
+                    $val  = $this->readTransform($val, $type);
+                }
+            }            
         }
         return $value;
     }
