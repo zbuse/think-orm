@@ -380,6 +380,33 @@ abstract class BaseQuery
     }
 
     /**
+     * 设置字段映射信息.
+     *
+     * @param array $map 字段映射信息
+     *
+     * @return $this
+     */
+    public function map(array $map)
+    {
+        $this->options['field_map'] = $map;
+
+        return $this;
+    }
+
+    /**
+     * 获取字段映射名
+     *
+     * @param string $name 字段名
+     *
+     * @return mixed
+     */
+    public function getFieldMap(string $name)
+    {
+        $map = $this->getOption('field_map', []);
+        return $map[$name] ?? null;
+    }
+
+    /**
      * 得到某个字段的值
      *
      * @param string $field   字段名

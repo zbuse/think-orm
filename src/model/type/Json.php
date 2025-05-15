@@ -23,7 +23,7 @@ class Json implements Typeable
         if (is_string($data) && json_validate($data)) {
             $data = json_decode($data, $assoc);
         }
-        $this->data = $data;
+        $this->data = is_string($data) ? [$data] : $data;
     }
 
     public function value()

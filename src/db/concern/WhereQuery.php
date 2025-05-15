@@ -522,6 +522,21 @@ trait WhereQuery
             array_unshift($param, $field);
             return $param;
         }
+        // 获取字段映射
+        $alias = $this->getFieldMap($field);
+        if ($alias) {
+            $field = $alias;
+            if (strpos($alias, '->')) {
+                [$relation, $field] = explode('->', $alias, 2);
+
+                $type = $this->getFieldType($relation);
+                if (is_null($type)) {
+                    // 自动关联查询
+                    $this->hasWhere($relation, [[$field , is_null($condition) ? '=' : $op, $condition ?? $op]]);                    
+                    return [];
+                }
+            }
+        }
 
         if ($field && is_null($condition)) {
             if (is_string($op) && in_array(strtoupper($op), ['NULL', 'NOTNULL', 'NOT NULL'], true)) {

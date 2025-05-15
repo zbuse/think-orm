@@ -49,39 +49,40 @@ abstract class View extends Entity
      */
     public function initData(bool $relation = true)
     {
-        // 获取实体属性
-        $properties = $this->getEntityPropertiesMap();
-        $data       = $this->model()->getData();
-        if (!empty($data)) {
-            foreach ($properties as $key => $field) {
-                if (!$relation) {
-                    // 确保存在基础模型数据
-                    if (isset($data[$field])) { 
-                        $this->$field = $data[$field];
-                    }
-                    continue;
-                }
+        if ($this->isEmpty()) {
+            return ;
+        }
 
-                if (is_int($key)) {
-                    $this->$field = $this->fetchViewAttr($field);
-                } elseif (strpos($field, '->')) {
-                    $items    = explode('->', $field);
-                    $relation = array_shift($items);
-                    if (isset($data[$relation])) {
-                        // 存在关联数据
-                        $value = $this->model()->$relation;
-                        foreach ($items as $item) {
-                            if (is_array($value)) {
-                                $value = $value[$item] ?? null;
-                            } elseif (is_object($value)) {
-                                $value = $value->$item ?? null;
-                            }
-                        }
-                        $this->$key = $value;
-                    }
-                } else {
-                    $this->$key = $this->fetchViewAttr($field);
+        $data       = $this->model()->getData();
+        $properties = $this->getEntityPropertiesMap();
+        foreach ($properties as $key => $field) {
+            if (!$relation) {
+                // 确保存在基础模型数据
+                if (isset($data[$field])) { 
+                    $this->$field = $data[$field];
                 }
+                continue;
+            }
+
+            if (is_int($key)) {
+                $this->$field = $this->fetchViewAttr($field);
+            } elseif (strpos($field, '->')) {
+                $items    = explode('->', $field);
+                $relation = array_shift($items);
+                if (isset($data[$relation])) {
+                    // 存在关联数据
+                    $value = $this->model()->$relation;
+                    foreach ($items as $item) {
+                        if (is_array($value)) {
+                            $value = $value[$item] ?? null;
+                        } elseif (is_object($value)) {
+                            $value = $value->$item ?? null;
+                        }
+                    }
+                    $this->$key = $value;
+                }
+            } else {
+                $this->$key = $this->fetchViewAttr($field);
             }
         }
     }
@@ -107,10 +108,12 @@ abstract class View extends Entity
             foreach ($relations as $relation) {
                 if ($model->$relation?->hasData($field)) {
                     $value   = $model->$relation->$field;
-                    $mapping = $this->getOption('autoMappingAlias', []);
+                    $mapping = $this->getOption('viewMapping', []);
 
-                    $mapping[$field] = $relation . '->' . $field;
-                    $this->setOption('autoMappingAlias', $mapping);
+                    if (!isset($mapping[$field])) {
+                        $mapping[$field] = $relation . '->' . $field;
+                        $this->setOption('viewMapping', $mapping);
+                    }
                     break;
                 }
             }
@@ -349,7 +352,7 @@ abstract class View extends Entity
     {
         // 获取实体属性
         $properties = $this->getEntityPropertiesMap();
-        $mapping    = $this->getOption('autoMappingAlias', []);
+        $mapping    = $this->getOption('viewMapping', []);
         $data       = $this->getData();
         $item       = [];
         $together   = [];
@@ -567,10 +570,11 @@ abstract class View extends Entity
             $db = $entity->model();
         } else {
             // 调用Query类查询方法
-            $db = $entity->model()->db();
+            $map = $entity->getOption('viewMapping', []);
+            $db  = $entity->model()->db()->map($map);
         }
 
-        if ('with' != $method && !empty($entity->getOption('autoMapping'))) {
+        if (!in_array(strtolower($method), ['with','withjoin']) && !empty($entity->getOption('autoMapping'))) {
             // 自动关联查询
             $db->with($entity->getOption('autoMapping'));
         }
