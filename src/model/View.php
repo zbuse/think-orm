@@ -74,7 +74,7 @@ abstract class View extends Entity
                         foreach ($items as $item) {
                             if ($value instanceof Json) {
                                 // JSON字段数据
-                                $value = $value->value();
+                                $value = $this->readTransformJson($relation, $value);
                             }
 
                             if (is_array($value)) {

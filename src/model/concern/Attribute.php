@@ -611,12 +611,39 @@ trait Attribute
             $value = $this->$method($value, $data);
         } elseif ($value instanceof Typeable || is_subclass_of($value, EnumTransform::class, false)) {
             // 类型自动转换
-            $value = $value->value();
+            if ($value instanceof Json) {
+                // JSON数据转换
+                $value = $this->readTransformJson($name, $value);
+            } else {
+                $value = $value->value();
+            }
         } elseif (is_int($value) && $this->isTimeAttr($name) && false != $this->getDateFormat()) {
             // 兼容数字类型时间字段的自动转换输出
             $value = (new \DateTime())
                 ->setTimestamp($value)
                 ->format($this->getDateFormat());
+        }
+        return $value;
+    }
+
+    /**
+     * 处理JSON数据对象的值
+     *
+     * @param string $name 名称
+     * @param Json   $value 值
+     *
+     * @return array|object
+     */
+    public function readTransformJson(string $name, Json $value)
+    {
+        // JSON数据转换
+        $value = $value->value();
+        foreach ($value as $key => &$val) {
+            $type = $this->getFields($name . '->' . $key);
+            if ($type) {
+                // 定义了JSON属性类型自动转换
+                $val  = $this->readTransform($val, $type);
+            }
         }
         return $value;
     }
