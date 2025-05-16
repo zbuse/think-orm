@@ -571,7 +571,7 @@ abstract class View extends Entity
         } else {
             // 调用Query类查询方法
             $map = $entity->getOption('viewMapping', []);
-            $db  = $entity->model()->db()->map($map);
+            $db  = $entity->model()->db()->fieldMap($map);
         }
 
         if (!in_array(strtolower($method), ['with','withjoin']) && !empty($entity->getOption('autoMapping'))) {

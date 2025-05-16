@@ -386,7 +386,7 @@ abstract class BaseQuery
      *
      * @return $this
      */
-    public function map(array $map)
+    public function fieldMap(array $map)
     {
         $this->options['field_map'] = $map;
 
