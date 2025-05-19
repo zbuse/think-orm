@@ -31,23 +31,21 @@ abstract class View extends Entity
      * 架构函数.
      *
      * @param Model $model 模型连接对象
-     * @param bool  $with  是否存在with关联查询
      */
-    public function __construct(?Model $model = null, bool $with = false)
+    public function __construct(?Model $model = null)
     {
         parent::__construct($model);
 
         // 初始化模型
-        $this->initData(!$with);
+        $this->initData();
     }
 
     /**
      * 初始化实体数据属性（如果存在关联查询则会延迟执行）.
      *
-     * @param bool  $relation  是否处理关联数据
      * @return void
      */
-    public function initData(bool $relation = true)
+    public function initData()
     {
         if ($this->isEmpty()) {
             return ;
@@ -56,14 +54,6 @@ abstract class View extends Entity
         $data       = $this->model()->getData();
         $properties = $this->getEntityPropertiesMap();
         foreach ($properties as $key => $field) {
-            if (!$relation) {
-                // 确保存在基础模型数据
-                if (isset($data[$field])) { 
-                    $this->$field = $data[$field];
-                }
-                continue;
-            }
-
             if (is_int($key)) {
                 $this->$field = $this->fetchViewAttr($field);
             } elseif (strpos($field, '->')) {
@@ -289,8 +279,21 @@ abstract class View extends Entity
     public function clone()
     {
         $model = new static();
-        $model->setModel($this->model())->initData();
+        $model->setModel($this->model());
         return $model;
+    }
+
+    /**
+     *  设置模型.
+     *
+     * @param Model $model 模型对象
+     * @return $this
+     */
+    public function setModel(Model $model)
+    {
+        parent::setModel($model);
+        $this->initData();
+        return $this;
     }
 
     /**

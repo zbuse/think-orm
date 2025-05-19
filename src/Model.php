@@ -251,13 +251,12 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
             $model->exists(true);
         }
 
-        $with = !empty($options['with']) || !empty($options['with_join']);
         if ($this->getEntity()) {
             // 存在对应实体模型实例
-            return $this->getEntity()->newInstance($model, $with);
+            return $this->getEntity()->newInstance($model);
         }
 
-        return $this->fetchModel($model, $with);
+        return $this->fetchModel($model);
     }
 
     /**
@@ -276,15 +275,14 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      * 获取实际模型实例.
      *
      * @param Model $model
-     * @param bool  $with 是否包含关联查询
      *
      * @return Modelable
      */
-    protected function fetchModel(Model $model, bool $with = false): Modelable
+    protected function fetchModel(Model $model): Modelable
     {
         $class = $model->getOption('entityClass', str_replace('\\model\\', '\\entity\\', static::class));
         if (class_exists($class) && is_subclass_of($class, Entity::class)) {
-            $entity = new $class($model, $with);
+            $entity = new $class($model);
             $model->entity($entity);
             return $entity;
         }
