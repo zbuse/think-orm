@@ -41,7 +41,7 @@ abstract class View extends Entity
     }
 
     /**
-     * 初始化实体数据属性（如果存在关联查询则会延迟执行）.
+     * 初始化实体数据属性.
      *
      * @return void
      */
@@ -279,8 +279,7 @@ abstract class View extends Entity
     public function clone()
     {
         $model = new static();
-        $model->setModel($this->model());
-        return $model;
+        return $model->setModel($this->model());
     }
 
     /**
