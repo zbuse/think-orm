@@ -150,7 +150,7 @@ abstract class View extends Entity
         $properties = $this->getOption('view_properties');
         if (empty($properties)) {
             $fields     = $this->getEntityProperties();
-            $mapping    = $this->getOption('viewMapping', []);
+            $mapping    = $this->parseAutoMapping();
             $properties = [];
             foreach ($fields as $field) {
                 if (isset($mapping[$field])) {
@@ -166,16 +166,16 @@ abstract class View extends Entity
     }
 
     /**
-     * 获取视图模型的完整映射属性（包括解析autoMapping的自动映射）
+     * 解析autoMapping的字段映射
      *
      * @return array
      */
-    protected function getViewMapWithRelation(): array
+    protected function parseAutoMapping(): array
     {
-        $relations = $this->getOption('autoMapping', []);
-        $mapping   = $this->getOption('viewMapping', []);
+        $fields     = $this->getEntityProperties();
+        $mapping    = $this->getOption('viewMapping', []);
+        $relations  = $this->getOption('autoMapping', []);
         array_unshift($relations, $this->model());
-        $fields    = $this->getEntityProperties();
         foreach ($fields as $field) {
             if (!isset($mapping[$field]) && $relations) {
                 foreach ($relations as $relation) {
@@ -393,35 +393,47 @@ abstract class View extends Entity
     {
         // 获取实体属性
         $properties = $this->getEntityPropertiesMap();
-        $mapping    = $this->getOption('viewMapping', []);
         $data       = $this->getData();
         $item       = [];
         $together   = [];
+        $array      = [];
         foreach ($properties as $key => $field) {
             if (strpos($field, '->')) {
-                $fields     = explode('->', $field);
-                $together[] = current($fields);
-                $last       = array_pop($fields);
-                $target     = $this->model();
-                foreach ($fields as $attr) {
-                    $target = $target?->$attr;
+                if (!isset($data[$key]) || substr_count($field, '->') > 1) {
+                    // 排除空值 以及 多级关联属性值
+                    continue;
                 }
-                if ($target) {
-                    $target->$last = $data[$key];
+                [$relation, $field] = explode('->', $field);
+                if ('json' == $this->model()->getFieldType($relation)) {
+                    // JSON数据赋值
+                    $array[$relation][$field] = $data[$key];
+                } else {
+                    // 关联数据赋值
+                    $together[] = $relation;
+                    if ($this->model()->hasData($relation)) {
+                        // 关联更新
+                        $this->model()->$relation->$field = $data[$key];                    
+                    } else {
+                        // 新增关联
+                        $array[$relation][$field] = $data[$key];
+                    }
                 }
-            } elseif (is_int($key) && isset($mapping[$field])) {
-                [$relation] = explode('->', $mapping[$field]);
-                $together[] = $relation;
-                $this->model()->$relation->$field = $data[$field];
             } else {
-                $item[$field] =  $data[is_int($key) ? $field : $key];
+                $value =  $data[is_int($key) ? $field : $key];
+                if (isset($value)) {
+                    $item[$field] = $value;
+                }
             }
+        }
+
+        // 关联数据或JSON数据封装
+        foreach ($array as $relation => $val) {
+            $this->model()->$relation = $val;
         }
 
         if (!empty($together)) {
             // 自动关联写入
-            $together = array_unique($together);
-            $this->model()->together($together);
+            $this->model()->together(array_unique($together));
         }
         return $item;
     }
@@ -608,7 +620,7 @@ abstract class View extends Entity
             $db = $model;
         } else {
             // 处理映射字段的查询
-            $map   = $entity->getViewMapWithRelation();
+            $map   = $entity->parseAutoMapping();
             $alias = Str::snake(class_basename($model));
             $db    = $model->db()->alias($alias)->via($alias)->fieldMap($map);
         }
