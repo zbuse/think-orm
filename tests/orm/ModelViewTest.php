@@ -170,17 +170,12 @@ SQL
     public function testViewModelWithRelation()
     {
         // 创建测试数据
-        $user = TestUserModel::create([
-            'name'   => 'test3',
-            'age'    => 28,
-            'status' => 1,
-        ]);
-
-        // 创建关联数据
-        $profile = UserProfileModel::create([
-            'user_id' => $user->id,
-            'email'   => 'test3@example.com',
-            'address' => 'Test Address',
+        $user = UserViewModel::create([
+            'nickname' => 'test3',
+            'user_age' => 28,
+            'status'   => 1,
+            'email'    => 'test3@example.com',
+            'address'  => 'Test Address',            
         ]);
 
         // 加载关联数据
