@@ -36,7 +36,7 @@ abstract class View extends Entity
     {
         parent::__construct($model);
 
-        // 初始化模型
+        // 初始化模型数据
         $this->initData();
     }
 
@@ -45,7 +45,7 @@ abstract class View extends Entity
      *
      * @return void
      */
-    public function initData()
+    protected function initData()
     {
         if ($this->isEmpty()) {
             return ;
@@ -108,7 +108,6 @@ abstract class View extends Entity
                 }
             }
         }
-
         return $value;
     }
 
@@ -146,7 +145,6 @@ abstract class View extends Entity
                     $properties[] = $field;
                 }
             }
-
             $this->setOption('view_properties', $properties);
         }
 
@@ -192,9 +190,7 @@ abstract class View extends Entity
      */
     public function refresh()
     {
-        if ($this->isEmpty()) {
-            $this->initData();
-        }
+        $this->initData();
         return $this;
     }
 
@@ -450,9 +446,8 @@ abstract class View extends Entity
     {
         $entity = new static();
         $model  = $entity->model()->exists(false)->save($data, true);
-        $entity->refresh();
-
-        return $entity;
+        // 刷新视图模型数据
+        return $entity->refresh();
     }
 
     /**
@@ -468,9 +463,7 @@ abstract class View extends Entity
         $entity = new static();
         $model  = $entity->model()->allowField($allowField)->exists(true)->save($data, $where, true);
         // 刷新视图模型数据
-        $entity->refresh();
-
-        return $entity;
+        return $entity->refresh();
     }
 
     /**
@@ -571,7 +564,7 @@ abstract class View extends Entity
             // 调用model的静态方法
             $db = $entity->model();
         } else {
-            // 调用Query类查询方法
+            // 处理字段映射
             $map = $entity->getOption('viewMapping', []);
             $db  = $entity->model()->db()->fieldMap($map);
         }
