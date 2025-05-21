@@ -385,8 +385,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
             $this->setKey($db->getLastInsID());
         } elseif ($refresh) {
             // 刷新数据
-            $data = $db->find()->getData();
-            $this->data($data);
+            $this->refresh();
         }
         $this->trigger($isUpdate ? 'AfterUpdate' : 'AfterInsert');
         $this->trigger('AfterWrite');

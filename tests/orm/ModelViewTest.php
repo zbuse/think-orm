@@ -15,6 +15,7 @@ class UserProfileModel extends Model
 
 class UserViewModel extends View
 {
+    public $id;
     public $nickname;
     public $test_name;
     public $user_age;
@@ -170,14 +171,21 @@ SQL
     public function testViewModelWithRelation()
     {
         // 创建测试数据
+        $user = new UserViewModel;
+        $user->nickname = 'test3';
+        $user->user_age = 28;
+        $user->status   = 1;
+        $user->email    = 'test3@example.com';
+        $user->address  = 'Test Address';       
+        $user->save();
+
         $user = UserViewModel::create([
             'nickname' => 'test3',
             'user_age' => 28,
             'status'   => 1,
             'email'    => 'test3@example.com',
             'address'  => 'Test Address',            
-        ]);
-
+        ]);        
         // 加载关联数据
         $viewModel = UserViewModel::find($user->id);
 
@@ -198,6 +206,45 @@ SQL
         $data = json_decode($json, true);
         $this->assertEquals('test3@example.com', $data['email']);
         $this->assertEquals('Test Address', $data['address']);
+
+        // 测试关联模型写入
+        $viewModel->nickname = 'update_test3';
+        $viewModel->email = 'update_test3@example.com';
+        $viewModel->address = 'update_Test Address';
+        $viewModel->save();
+
+        // 验证关联模型更新
+        $updatedModel = UserViewModel::where('nickname', 'update_test3')->where('email', 'update_test3@example.com')->find();
+        $this->assertEquals('update_test3', $updatedModel->nickname);
+        $this->assertEquals('update_test3@example.com', $updatedModel->email);
+
+        // 批量创建或更新数据
+        $dataset = [
+            ['nickname' => 'test4',
+            'user_age' => 20,
+            'status'   => 1,
+            'email'    => 'test4@example.com',
+            'address'  => 'Address4',],
+            ['id'      => 1,
+            'nickname' => 'test3',
+            'user_age' => 18,
+            'status'   => 1,
+            'email'    => 'test3@example.com',
+            'address'  => 'Test Address',],            
+        ];
+        $list = UserViewModel::saveAll($dataset);
+        foreach ($list as $key => $user) {
+            $this->assertEquals($dataset[$key]['nickname'], $user->nickname);
+            $this->assertEquals($dataset[$key]['email'], $user->email);
+        }
+        $viewModel = UserViewModel::find(1);
+        $this->assertEquals('test3', $viewModel->nickname);
+        $this->assertEquals('test_test3', $viewModel->test_name);
+        $this->assertEquals(18, $viewModel->user_age);
+
+        $user = UserViewModel::update(['nickname' => 'new nickname'], ['id' => 1]);
+        $this->assertEquals('new nickname', $user->nickname);
+        
     }
 
     public function testViewModelWithoutRelation()

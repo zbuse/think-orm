@@ -65,6 +65,8 @@ abstract class View extends Entity
                 $this->$key = $this->fetchViewAttr($field, $data);
             }
         }
+        // 标记数据存在
+        $this->exists(true);
     }
 
     /**
@@ -244,6 +246,7 @@ abstract class View extends Entity
         foreach ($this->getEntityProperties() as $field) {
             $this->$field = null;
         }
+        $this->exists(false);
         return $this;
     }
 
@@ -457,14 +460,41 @@ abstract class View extends Entity
     }
 
     /**
+     * 设置数据是否存在.
+     *
+     * @param bool $exists
+     *
+     * @return $this
+     */
+    public function exists(bool $exists = true)
+    {
+        return $this->setOption('exists', $exists);
+    }
+
+    /**
+     * 判断数据是否存在数据库.
+     *
+     * @return bool
+     */
+    public function isExists(): bool
+    {
+        return $this->getOption('exists', false);
+    }
+
+    /**
      * 保存模型实例数据.
      *
-     * @param mixed $insert   是否强制新增 true为强制新增
+     * @param array|object $data 数据
+     * @param mixed $where 更新条件 true为强制新增
      * @param bool  $refresh  是否刷新数据
      * @return bool
      */
-    public function save($insert = false, bool $refresh = false): bool
+    public function save(array | object $data = [], $where = [], bool $refresh = false): bool
     {
+        if ($data) {
+            $this->data($data);
+        }
+
         // 根据映射关系转换为实际模型数据
         $data = $this->convertData();
         // 处理自动时间字段数据
@@ -472,7 +502,15 @@ abstract class View extends Entity
             unset($data[$field]);
         }
 
-        return $this->model()->save($data, $insert, $refresh);
+        $result = $this->model()
+            ->exists($this->isExists())
+            ->save($data, $where, $refresh);
+
+        if ($result) {
+            // 刷新数据
+            $this->refresh();
+        }
+        return $result;
     }
 
     /**
@@ -499,9 +537,8 @@ abstract class View extends Entity
     public static function create(array | object $data)
     {
         $entity = new static();
-        $model  = $entity->data($data)->save(true);
-        // 刷新视图模型数据
-        return $entity->refresh();
+        $entity->exists(false)->save($data, true);
+        return $entity;
     }
 
     /**
@@ -514,9 +551,8 @@ abstract class View extends Entity
     public static function update(array | object $data, $where = [])
     {
         $entity = new static();
-        $model  = $entity->data($data)->save($where, true);
-        // 刷新视图模型数据
-        return $entity->refresh();
+        $entity->exists(true)->save($data, $where, true);
+        return $entity;
     }
 
     /**
@@ -540,10 +576,10 @@ abstract class View extends Entity
                         $exists = false;
                     }
                 }
-                $entity->model()->exists($exists);
+                $entity->exists($exists);
             }
-            $entity->data($data)->save(!$replace, true);
-            $collection[] = $entity->refresh();
+            $entity->save($data, !$replace, true);
+            $collection[] = $entity;
         }
         return new Collection($collection);
     }
