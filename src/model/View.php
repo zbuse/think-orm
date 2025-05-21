@@ -109,9 +109,25 @@ abstract class View extends Entity
         $model  = $this->model();
         if (method_exists($this, $method)) {
             // 视图获取器
-            $value = $this->$method($model);
+            $value = $this->$method($model); 
+        } elseif ($model->hasData($field)) {
+            // 获取主模型数据（支持获取器）
+            $value = $model->$field;
         } else {
-            $value = $model->hasData($field) ? $model->$field : null;
+            // 获取关联模型数据
+            $mapping   = $this->getOption('viewMapping', []);
+            $relations = $this->getOption('autoMapping', []);
+            $value     = null;
+            foreach ($relations as $relation) {
+                if (isset($data[$relation]) && $model->$relation->hasData($field)) {
+                    $value = $model->$relation->$field;
+                    if (!isset($mapping[$field])) {
+                        $mapping[$field] = $relation . '->' . $field;
+                        $this->setOption('viewMapping', $mapping);
+                    }
+                    break;
+                }
+            }
         }
         return $value;
     }
