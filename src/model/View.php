@@ -143,7 +143,7 @@ abstract class View extends Entity
             // 获取实体属性列表
             $fields     = $this->getEntityProperties();
             // 获取属性映射列表
-            $mapping    = $this->parseAutoMapping();
+            $mapping    = $this->getOption('viewMapping', []);
             $properties = [];
             foreach ($fields as $field) {
                 if (isset($mapping[$field])) {
@@ -679,7 +679,7 @@ abstract class View extends Entity
     {
         $entity = new static();
         $model  = $entity->model();
-        if (in_array($method, ['destroy', 'saveAll'])) {
+        if (in_array($method, ['destroy'])) {
             $db = $model;
         } else {
             // 处理映射字段的查询
