@@ -785,6 +785,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
         $name = $this->getRealFieldName($name);
 
         $this->setWeakData('data', $name, null);
+        $this->setWeakData('get', $name, null);
     }
 
     public function __toString()

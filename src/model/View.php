@@ -114,22 +114,35 @@ abstract class View extends Entity
             // 获取主模型数据（支持获取器）
             $value = $model->$field;
         } else {
-            // 获取关联模型数据
-            $mapping   = $this->getOption('viewMapping', []);
-            $relations = $this->getOption('autoMapping', []);
-            $value     = null;
-            foreach ($relations as $relation) {
-                if (isset($data[$relation]) && $model->$relation->hasData($field)) {
-                    $value = $model->$relation->$field;
-                    if (!isset($mapping[$field])) {
-                        $mapping[$field] = $relation . '->' . $field;
-                        $this->setOption('viewMapping', $mapping);
-                    }
-                    break;
-                }
-            }
+            // 获取自动映射的属性数据
+            $value = $this->getAutoRelationValue($field, $data);
         }
         return $value;
+    }
+
+    /**
+     * 获取autoMapping自动映射的视图属性值.
+     *
+     * @param string $field 视图属性
+     * @param array  $data  模型数据
+     *
+     * @return mixed
+     */
+    private function getAutoRelationValue(string $field, array $data)
+    {
+        $mapping   = $this->getOption('viewMapping', []);
+        $relations = $this->getOption('autoMapping', []);
+        foreach ($relations as $relation) {
+            if (isset($data[$relation]) && $this->model()->$relation->hasData($field)) {
+                $value = $this->model()->$relation->$field;
+                if (!isset($mapping[$field])) {
+                    $mapping[$field] = $relation . '->' . $field;
+                    $this->setOption('viewMapping', $mapping);
+                }
+                break;
+            }
+        }
+        return $value ?? null;
     }
 
     /**
