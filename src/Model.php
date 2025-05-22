@@ -770,7 +770,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      */
     public function __isset(string $name): bool
     {
-        return !is_null($this->get($name, false));
+        return !is_null($this->get($name));
     }
 
     /**

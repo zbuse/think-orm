@@ -186,22 +186,24 @@ abstract class View extends Entity
         $fields     = $this->getEntityProperties();
         $mapping    = $this->getOption('viewMapping', []);
         $relations  = $this->getOption('autoMapping', []);
-        array_unshift($relations, $this->model());
-        foreach ($fields as $field) {
-            if (!isset($mapping[$field]) && $relations) {
-                foreach ($relations as $relation) {
-                    if (is_object($relation)) {
-                        if ($relation->getFieldType($field)) {
+        if ($relations) {
+            array_unshift($relations, $this->model());
+            foreach ($fields as $field) {
+                if (!isset($mapping[$field])) {
+                    foreach ($relations as $relation) {
+                        if (is_object($relation)) {
+                            if ($relation->getFieldType($field)) {
+                                break;
+                            }
+                        } elseif ($this->model()->$relation()->getFieldType($field)) {
+                            $mapping[$field] = $relation . '->' . $field;
                             break;
                         }
-                    } elseif ($this->model()->$relation()->getFieldType($field)) {
-                        $mapping[$field] = $relation . '->' . $field;
-                        break;
                     }
                 }
             }
+            $this->setOption('viewMapping', $mapping);
         }
-        $this->setOption('viewMapping', $mapping);
         return $mapping;
     }
 
@@ -428,7 +430,7 @@ abstract class View extends Entity
                     $together[] = $relation;
                     if ($this->model()->hasData($relation)) {
                         // 关联更新
-                        $this->model()->$relation->$field = $data[$key];                    
+                        $this->model()->$relation->$field = $data[$key];
                     } else {
                         // 新增关联
                         $array[$relation][$field] = $data[$key];
