@@ -560,7 +560,7 @@ trait Attribute
             return $value;
         }
 
-        if (!array_key_exists($name, $this->getData())) {
+        if (!array_key_exists($name, $this->getFields())) {
             // 动态获取关联数据
             $value = $this->getRelationData($name) ?: null;
         } else {
