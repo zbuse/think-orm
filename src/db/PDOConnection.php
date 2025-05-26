@@ -686,7 +686,8 @@ abstract class PDOConnection extends Connection
      */
     public function query(string $sql, array $bind = [], bool $master = false): array
     {
-        return $this->pdoQuery($this->newQuery()->bind($bind), $sql, $master);
+        $this->getPDOStatement($sql, $bind, $master);
+        return $this->getResult();
     }
 
     /**
@@ -701,7 +702,25 @@ abstract class PDOConnection extends Connection
      */
     public function execute(string $sql, array $bind = []): int
     {
-        return $this->pdoExecute($this->newQuery()->bind($bind), $sql, true);
+        $this->getPDOStatement($sql, $bind, true);
+        return $this->PDOStatement->rowCount();
+    }
+
+    /**
+     * 获取最近插入的ID.
+     * @param string    $sequence 自增序列名
+     *
+     * @return mixed
+     */
+    public function getAutoID(?string $sequence = null)
+    {
+        try {
+            $insertId = $this->linkID->lastInsertId($sequence);
+        } catch (\Exception $e) {
+            $insertId = '';
+        }
+
+        return $insertId;
     }
 
     /**
@@ -1747,13 +1766,7 @@ abstract class PDOConnection extends Connection
      */
     public function getLastInsID(BaseQuery $query, ?string $sequence = null)
     {
-        try {
-            $insertId = $this->linkID->lastInsertId($sequence);
-        } catch (\Exception $e) {
-            $insertId = '';
-        }
-
-        return $this->autoInsIDType($query, $insertId);
+        return $this->autoInsIDType($query, $this->getAutoID($sequence));
     }
 
     /**
