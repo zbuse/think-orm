@@ -304,7 +304,8 @@ abstract class PDOConnection extends Connection
             str_starts_with($type, 'set')           => 'set',
             str_starts_with($type, 'enum')          => 'enum',
             str_starts_with($type, 'bigint')        => 'bigint',
-            str_contains($type, 'float') || str_contains($type, 'double') || str_contains($type, 'real') || str_contains($type, 'numeric')          => 'float',
+            str_contains($type, 'float') || str_contains($type, 'double') || 
+            str_contains($type, 'real')             => 'float',
             str_contains($type, 'int') || str_contains($type, 'serial') ||
             str_contains($type, 'bit')              => 'int',
             str_contains($type, 'bool')             => 'bool',
