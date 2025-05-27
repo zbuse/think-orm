@@ -101,7 +101,17 @@ trait Attribute
      */
     public function getPk()
     {
-        return $this->getOption('pk');
+        return $this->getOption('pk', 'id');
+    }
+
+    /**
+     * 获取自增键名.
+     *
+     * @return string
+     */
+    public function getAutoInc()
+    {
+        return $this->getOption('autoInc', $this->getPk());
     }
 
     /**
