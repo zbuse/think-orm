@@ -105,16 +105,6 @@ trait Attribute
     }
 
     /**
-     * 获取自增键名.
-     *
-     * @return string
-     */
-    public function getAutoInc()
-    {
-        return $this->getOption('autoInc', $this->getPk());
-    }
-
-    /**
      * 获取表名（不含前后缀）.
      *
      * @return string

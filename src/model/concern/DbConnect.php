@@ -42,7 +42,7 @@ trait DbConnect
 
         return $db->schema($this->getOption('schema'))
             ->pk($this->getPk())
-            ->autoInc($this->getAutoInc())
+            ->autoInc($this->getOption('autoInc'))
             ->suffix($this->getOption('suffix'))
             ->setKey($this->getKey())
             ->replace($this->getOption('replace', false))
