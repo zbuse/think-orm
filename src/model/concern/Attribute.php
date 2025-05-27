@@ -209,9 +209,10 @@ trait Attribute
             if (class_exists($type) && !($value instanceof $type)) {
                 if (is_subclass_of($type, Typeable::class)) {
                     $value = $type::from($value, $model);
-                    if ($value instanceof DateTime && $param) {
+                    if ($param && $value instanceof DateTime) {
+                        // 设置时间输出格式
                         $value->setFormat($param);
-                    }                    
+                    }
                 } elseif (is_subclass_of($type, FieldTypeTransform::class)) {
                     $value = $type::get($value, $model);
                 } elseif (is_subclass_of($type, BackedEnum::class)) {

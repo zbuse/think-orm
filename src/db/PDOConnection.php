@@ -1679,19 +1679,18 @@ abstract class PDOConnection extends Connection
      * 批处理执行SQL语句
      * 批处理的指令都认为是execute操作.
      *
-     * @param BaseQuery $query    查询对象
      * @param array     $sqlArray SQL批处理指令
      *
      * @return bool
      */
-    public function batchQuery(BaseQuery $query, array $sqlArray = []): bool
+    public function batchQuery(array $sqlArray = []): bool
     {
         // 自动启动事务支持
         $this->startTrans();
 
         try {
             foreach ($sqlArray as $sql) {
-                $this->pdoExecute($query, $sql);
+                $this->execute($sql);
             }
             // 提交事务
             $this->commit();
