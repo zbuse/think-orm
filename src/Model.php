@@ -827,6 +827,10 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      */
     public function __unserialize(array $data) 
     {
+        if (!self::$weakMap) {
+            self::$weakMap = new WeakMap;
+        }
+
         self::$weakMap[$this] = $data;
         // 重新初始化
         $this->initialize();
