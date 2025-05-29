@@ -609,7 +609,7 @@ abstract class View extends Entity
                 }
                 $entity->exists($exists);
             }
-            $entity->save($data, !$replace, true);
+            $entity->save($data, !$replace);
             $collection[] = $entity;
         }
         return new Collection($collection);
@@ -701,6 +701,11 @@ abstract class View extends Entity
      */
     public function __unserialize(array $data) 
     {
+        parent::__construct();
+        if (!empty($data)){
+            $this->exists(true);
+        }
+
         foreach ($data as $name => $val) {
             $this->$name = $val;
         }
