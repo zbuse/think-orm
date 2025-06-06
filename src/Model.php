@@ -382,6 +382,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
 
         if (!$isUpdate) {
             $this->exists(true);
+            $pk = $this->getPk();
             if (is_string($pk) && !$this->getKey()) {
                 $this->setKey($db->getLastInsID());
             }
