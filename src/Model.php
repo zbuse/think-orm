@@ -28,7 +28,7 @@ use WeakMap;
 
 /**
  * Class Model.
- * @mixin Query
+ * @mixin \think\db\Query
  *
  * @method static void  onAfterRead(Model $model)     after_read事件定义
  * @method static mixed onBeforeInsert(Model $model)  before_insert事件定义
@@ -382,7 +382,9 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
 
         if (!$isUpdate) {
             $this->exists(true);
-            $this->setKey($db->getLastInsID());
+            if (is_string($pk) && !$this->getKey()) {
+                $this->setKey($db->getLastInsID());
+            }
         } elseif ($refresh) {
             // 刷新数据
             $this->refresh();
