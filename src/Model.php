@@ -382,9 +382,11 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
 
         if (!$isUpdate) {
             $this->exists(true);
-            $pk = $this->getPk();
-            if (is_string($pk) && !$this->getKey()) {
-                $this->setKey($db->getLastInsID());
+            // 写入自增键值
+            $key = $db->getAutoInc();
+            $val = $db->getLastInsID();
+            if ($key && $val) {
+                $this->setData($key, $val);
             }
         } elseif ($refresh) {
             // 刷新数据
