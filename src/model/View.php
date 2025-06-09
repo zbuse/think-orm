@@ -248,8 +248,7 @@ abstract class View extends Entity
         if (is_object($data)) {
             $data = get_object_vars($data);
         }
-        // 数据验证
-        $data = $this->validate($data);
+
         foreach ($this->getEntityProperties() as $field) {
             $this->$field = $data[$field] ?? null;
         }
@@ -473,21 +472,18 @@ abstract class View extends Entity
      * 验证视图模型数据. 
      *
      * @param array $data 数据
-     * @param array $allow 需要验证的字段
-     *
      * @throws ValidateException
-     * @return array
+     * @return bool
      */
-    protected function validate(array $data = [], array $allow = []): array
+    protected function validate(array $data): bool
     {
         $validater = $this->getOption('validate');
-        $data      = $data ?: $this->getData();
         if (!empty($validater)) {
             return validate($validater)
-                ->only($allow ?: array_keys($data))
-                ->checked($data);
+                ->only(array_keys($data))
+                ->check($data);
         }
-        return $data;
+        return true;
     }
 
     /**
@@ -525,9 +521,12 @@ abstract class View extends Entity
         if ($data) {
             $this->data($data);
         }
-
         // 根据映射关系转换为实际模型数据
         $data = $this->convertData();
+
+        // 验证数据
+        $this->validate($data);
+
         // 处理自动时间字段数据
         foreach ($this->model()->getAutoTimeFields() as $field) {
             unset($data[$field]);
