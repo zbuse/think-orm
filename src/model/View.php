@@ -472,15 +472,16 @@ abstract class View extends Entity
      * 验证视图模型数据. 
      *
      * @param array $data 数据
+     * @param array $allow 需要验证的字段
      * @throws ValidateException
      * @return bool
      */
-    protected function validate(array $data): bool
+    protected function validate(array $data, array $allow = []): bool
     {
         $validater = $this->getOption('validate');
         if (!empty($validater)) {
             return validate($validater)
-                ->only(array_keys($data))
+                ->only($allow ?: array_keys($data))
                 ->check($data);
         }
         return true;
@@ -525,7 +526,7 @@ abstract class View extends Entity
         $data = $this->convertData();
 
         // 验证数据
-        $this->validate($data);
+        $this->validate($this->getOption('validate_mapping_data') ? $data : $this->getData());
 
         // 处理自动时间字段数据
         foreach ($this->model()->getAutoTimeFields() as $field) {
