@@ -312,6 +312,17 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
     }
 
     /**
+     * 设置验证场景. 
+     *
+     * @param string|array $scene 场景名或数组
+     * @return $this
+     */
+    public function scene(string|array $scene)
+    {
+        return $this->setOption('scene', $scene);
+    }
+
+    /**
      * 验证模型数据.
      *
      * @param array $data 数据
@@ -325,7 +336,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
         $validater = $this->getOption('validate');
         if (!empty($validater)) {
             validate($validater)
-                ->only($allow ?: array_keys($data))
+                ->scene($this->getOption('scene') ?: $allow)
                 ->check($data);
         }
     }

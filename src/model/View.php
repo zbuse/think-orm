@@ -469,19 +469,29 @@ abstract class View extends Entity
     }
 
     /**
+     * 设置验证场景. 
+     *
+     * @param string|array $scene 场景名或数组
+     * @return $this
+     */
+    public function scene(string|array $scene)
+    {
+        return $this->setOption('scene', $scene);
+    }
+
+    /**
      * 验证视图模型数据. 
      *
      * @param array $data 数据
-     * @param array $allow 需要验证的字段
      * @throws ValidateException
      * @return bool
      */
-    protected function validate(array $data, array $allow = []): bool
+    protected function validate(array $data): bool
     {
         $validater = $this->getOption('validate');
         if (!empty($validater)) {
             return validate($validater)
-                ->only($allow ?: array_keys($data))
+                ->scene($this->getOption('scene') ?: array_keys($data))
                 ->check($data);
         }
         return true;
