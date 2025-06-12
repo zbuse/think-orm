@@ -818,8 +818,11 @@ abstract class BaseQuery
                 if (is_numeric($key)) {
                     $field[$key] = $this->parseOrderField($val);
                 } else {
-                    $field[$this->parseOrderField($key)] = $val;
-                    unset($field[$key]);
+                    $key1 = $this->parseOrderField($key);
+                    if ($key != $key1) {
+                        $field[$key1] = $val;
+                        unset($field[$key]);
+                    }
                 }
             }
         }
