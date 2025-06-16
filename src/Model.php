@@ -605,11 +605,15 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      * @param array|object  $data 数据
      * @param array  $allowField  允许字段
      * @param bool   $replace     使用Replace
+     * @param string $suffix      数据表后缀
      * @return Modelable
      */
-    public static function create(array | object $data, array $allowField = [], bool $replace = false): Modelable
+    public static function create(array | object $data, array $allowField = [], bool $replace = false, string $suffix = ''): Modelable
     {
         $model = new static();
+        if (!empty($suffix)) {
+            $model->setSuffix($suffix);
+        }
         $model->allowField($allowField)->replace($replace)->save($data, true);            
         return $model->fetchModel($model);
     }
@@ -620,12 +624,16 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      * @param array|object  $data 数据
      * @param mixed  $where       更新条件
      * @param array  $allowField  允许字段
+     * @param string $suffix      数据表后缀
      * @param bool   $refresh     是否刷新数据
      * @return Modelable
      */
-    public static function update(array | object $data, $where = [], array $allowField = [], bool $refresh = false): Modelable
+    public static function update(array | object $data, $where = [], array $allowField = [], string $suffix = '', bool $refresh = false): Modelable
     {
         $model  = new static();
+        if (!empty($suffix)) {
+            $model->setSuffix($suffix);
+        }        
         $model->allowField($allowField)->exists(true)->save($data, $where, $refresh);
         return $model->fetchModel($model);
     }
