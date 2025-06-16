@@ -47,12 +47,12 @@ abstract class View extends Entity
      */
     protected function initData()
     {
-        if ($this->isEmpty()) {
-            return ;
-        }
         // 获取属性映射关系
         $properties = $this->getEntityPropertiesMap();
         $data       = $this->model()->getData();
+        if (empty($data)) {
+            return ;
+        }
         foreach ($properties as $key => $field) {
             if (is_int($key)) {
                 // 主模型同名属性
@@ -167,23 +167,31 @@ abstract class View extends Entity
      */
     private function getEntityPropertiesMap(): array
     {
-        $properties = $this->getOption('view_properties');
+        $properties = $this->getOption('viewProperties');
         if (empty($properties)) {
             // 获取实体属性列表
             $fields     = $this->getEntityProperties();
             // 获取属性映射列表
             $mapping    = $this->getOption('viewMapping', []);
+            $relations  = $this->getOption('autoMapping', []);
             $properties = [];
             foreach ($fields as $field) {
                 if (isset($mapping[$field])) {
                     // 映射属性
                     $properties[$field] = $mapping[$field];
+                    if (strpos($mapping[$field], '->')) {
+                        $relation = strstr($mapping[$field], '->', true);
+                        if (!$this->model()->getFieldType($relation)) {
+                            $relations[] = $relation;
+                        }
+                    }
                 } else {
                     // 主模型同名属性
                     $properties[] = $field;
                 }
             }
-            $this->setOption('view_properties', $properties);
+            $this->setOption('autoRelation', array_unique($relations));
+            $this->setOption('viewProperties', $properties);
         }
 
         return $properties;
@@ -536,7 +544,7 @@ abstract class View extends Entity
         $data = $this->convertData();
 
         // 验证数据
-        $this->validate($this->getOption('validate_mapping_data') ? $data : $this->getData());
+        $this->validate($this->getOption('validateMappingData') ? $data : $this->getData());
 
         // 处理自动时间字段数据
         foreach ($this->model()->getAutoTimeFields() as $field) {
@@ -734,7 +742,7 @@ abstract class View extends Entity
             $db    = $model->db()->alias($alias)->via($alias)->fieldMap($map);
         }
 
-        $auto   = $entity->getOption('autoMapping');
+        $auto   = $entity->getOption('autoRelation');
         if (!empty($auto) && !in_array(strtolower($method), ['with','withjoin'])) {
             // 自动关联查询
             $db->with($auto);
