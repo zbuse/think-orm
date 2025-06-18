@@ -663,7 +663,7 @@ trait ModelRelationQuery
             }
         }
 
-        $result = $this->model->newInstance($result, $this->options);
+        $result = $this->model->newInstance($result);
 
         if ($this->suffix) {
             $result->setSuffix($this->suffix);

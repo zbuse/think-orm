@@ -240,11 +240,10 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      * 创建新的模型实例.
      *
      * @param array|object $data
-     * @param array        $options
      *
      * @return Model|Entity
      */
-    public function newInstance(array | object $data = [], array $options = [])
+    public function newInstance(array | object $data = [])
     {
         $model = new static($data);
         if (!empty($data)) {

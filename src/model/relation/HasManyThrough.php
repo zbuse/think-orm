@@ -257,11 +257,11 @@ class HasManyThrough extends Relation
         if ($withLimit && $collection) {
             $this->query->removeOption('limit');
         }
-
-        $list = $this->query
+        $method = ($subRelation || !empty($cache)) ? 'select' : 'cursor';
+        $list   = $this->query
             ->where($throughKey, 'in', $keys)
             ->cache($cache[0] ?? false, $cache[1] ?? null, $cache[2] ?? null)
-            ->select();
+            ->$method();
 
         // 组装模型数据
         $data = [];

@@ -217,11 +217,12 @@ class HasMany extends Relation
             $this->query->removeOption('limit');
         }
 
-        $list = $this->query
+        $method = ($subRelation || !empty($cache)) ? 'select' : 'cursor';
+        $list   = $this->query
             ->where($where)
             ->cache($cache[0] ?? false, $cache[1] ?? null, $cache[2] ?? null)
             ->with($subRelation)
-            ->select();
+            ->$method();
 
         // 组装模型数据
         $data = [];
