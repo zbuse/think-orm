@@ -92,7 +92,7 @@ class HasMany extends Relation
         if (!empty($range)) {
             $data = $this->eagerlyOneToMany([
                 [$this->foreignKey, 'in', array_unique($range)],
-            ], $subRelation, $closure, $cache);
+            ], $subRelation, $closure, $cache, true);
 
             // 关联数据封装
             foreach ($resultSet as $result) {
@@ -195,10 +195,11 @@ class HasMany extends Relation
      * @param array   $subRelation 子关联
      * @param Closure $closure
      * @param array   $cache       关联缓存
+     * @param bool    $collection  是否数据集查询
      *
      * @return array
      */
-    protected function eagerlyOneToMany(array $where, array $subRelation = [], ?Closure $closure = null, array $cache = []) : array
+    protected function eagerlyOneToMany(array $where, array $subRelation = [], ?Closure $closure = null, array $cache = [], bool $collection = false) : array
     {
         $foreignKey = $this->foreignKey;
 
@@ -211,7 +212,7 @@ class HasMany extends Relation
         }
 
         $withLimit = $this->query->getOption('limit');
-        if ($withLimit) {
+        if ($withLimit && $collection) {
             $this->query->removeOption('limit');
         }
 

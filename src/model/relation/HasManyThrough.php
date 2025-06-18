@@ -178,7 +178,7 @@ class HasManyThrough extends Relation
 
             $data = $this->eagerlyWhere([
                 [$this->foreignKey, 'in', array_unique($range)],
-            ], $foreignKey, $subRelation, $closure, $cache);
+            ], $foreignKey, $subRelation, $closure, $cache, true);
 
             // 关联数据封装
             foreach ($resultSet as $result) {
@@ -232,10 +232,11 @@ class HasManyThrough extends Relation
      * @param array   $subRelation 子关联
      * @param Closure $closure
      * @param array   $cache       关联缓存
+     * @param bool    $collection  是否数据集查询
      *
      * @return array
      */
-    protected function eagerlyWhere(array $where, string $key, array $subRelation = [], ?Closure $closure = null, array $cache = []): array
+    protected function eagerlyWhere(array $where, string $key, array $subRelation = [], ?Closure $closure = null, array $cache = [], bool $collection = false): array
     {
         // 预载入关联查询 支持嵌套预载入
         $throughList = $this->through->where($where)->select();
@@ -253,7 +254,7 @@ class HasManyThrough extends Relation
         }
 
         $withLimit = $this->query->getOption('limit');
-        if ($withLimit) {
+        if ($withLimit && $collection) {
             $this->query->removeOption('limit');
         }
 

@@ -315,7 +315,7 @@ class BelongsToMany extends Relation
             // 查询关联数据
             $data = $this->eagerlyManyToMany([
                 ['pivot.' . $localKey, 'in', array_unique($range)],
-            ], $subRelation, $closure, $cache);
+            ], $subRelation, $closure, $cache, true);
 
             // 关联数据封装
             foreach ($resultSet as $result) {
@@ -426,17 +426,18 @@ class BelongsToMany extends Relation
      * @param array   $subRelation 子关联
      * @param Closure $closure     闭包
      * @param array   $cache       关联缓存
+     * @param bool    $collection  是否数据集查询
      *
      * @return array
      */
-    protected function eagerlyManyToMany(array $where, array $subRelation = [], ?Closure $closure = null, array $cache = []) : array
+    protected function eagerlyManyToMany(array $where, array $subRelation = [], ?Closure $closure = null, array $cache = [], bool $collection = false) : array
     {
         if ($closure) {
             $closure($this->query);
         }
 
         $withLimit = $this->query->getOption('limit');
-        if ($withLimit) {
+        if ($withLimit && $collection) {
             $this->query->removeOption('limit');
         }
 
