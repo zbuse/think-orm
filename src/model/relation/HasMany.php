@@ -90,9 +90,10 @@ class HasMany extends Relation
         }
 
         if (!empty($range)) {
-            $data = $this->eagerlyOneToMany([
-                [$this->foreignKey, 'in', array_unique($range)],
-            ], $subRelation, $closure, $cache, true);
+            $range = array_unique($range);
+            $data  = $this->eagerlyOneToMany([
+                [$this->foreignKey, 'in', $range],
+            ], $subRelation, $closure, $cache, count($range) > 1 ? true : false);
 
             // 关联数据封装
             foreach ($resultSet as $result) {
