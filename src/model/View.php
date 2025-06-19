@@ -80,7 +80,6 @@ abstract class View extends Entity
     private function getRelationMapAttr(string $field, array $data)
     {
         $items    = explode('->', $field);
-        $value    = null;
         $relation = array_shift($items);
         if (isset($data[$relation])) {
             $value = $this->model()->$relation;
@@ -92,7 +91,7 @@ abstract class View extends Entity
                 }
             }
         }
-        return $value;
+        return $value ?? null;
     }
 
     /**
@@ -130,27 +129,20 @@ abstract class View extends Entity
      */
     private function getAutoRelationValue(string $field, array $data)
     {
-        $mapping   = $this->getOption('viewMapping', []);
         $relations = $this->getOption('autoMapping', []);
-        foreach ($relations as $relation) {
-            if (strpos($relation, '.')) {
-                [$relation, $subRelation] = explode('.', $relation);
-                if ($this->model()->$relation->$subRelation->hasData($field)) {
-                    $value = $this->model()->$relation->$subRelation->$field;
+        if ($relations) {
+            $mapping   = $this->getOption('viewMapping', []);
+            foreach ($relations as $relation) {
+                if (isset($data[$relation]) && $this->model()->$relation->hasData($field)) {
+                    $value = $this->model()->$relation->$field;
                     if (!isset($mapping[$field])) {
-                        $mapping[$field] = $relation . '->' . $subRelation . '->' . $field;
+                        $mapping[$field] = $relation . '->' . $field;
                     }
                     break;
                 }
-            } elseif (isset($data[$relation]) && $this->model()->$relation->hasData($field)) {
-                $value = $this->model()->$relation->$field;
-                if (!isset($mapping[$field])) {
-                    $mapping[$field] = $relation . '->' . $field;
-                }
-                break;
             }
+            $this->setOption('viewMapping', $mapping);
         }
-        $this->setOption('viewMapping', $mapping);
         return $value ?? null;
     }
 
@@ -750,7 +742,7 @@ abstract class View extends Entity
             $db    = $model->db()->alias($alias)->via($alias)->fieldMap($map);
         }
 
-        $auto   = $entity->getOption('autoRelation');
+        $auto = $entity->getOption('autoRelation');
         if (!empty($auto) && !in_array(strtolower($method), ['with','withjoin'])) {
             // 自动关联查询
             $db->with($auto);
