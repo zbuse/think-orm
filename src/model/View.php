@@ -133,15 +133,24 @@ abstract class View extends Entity
         $mapping   = $this->getOption('viewMapping', []);
         $relations = $this->getOption('autoMapping', []);
         foreach ($relations as $relation) {
-            if (isset($data[$relation]) && $this->model()->$relation->hasData($field)) {
+            if (strpos($relation, '.')) {
+                [$relation, $subRelation] = explode('.', $relation);
+                if ($this->model()->$relation->$subRelation->hasData($field)) {
+                    $value = $this->model()->$relation->$subRelation->$field;
+                    if (!isset($mapping[$field])) {
+                        $mapping[$field] = $relation . '->' . $subRelation . '->' . $field;
+                    }
+                    break;
+                }
+            } elseif (isset($data[$relation]) && $this->model()->$relation->hasData($field)) {
                 $value = $this->model()->$relation->$field;
                 if (!isset($mapping[$field])) {
                     $mapping[$field] = $relation . '->' . $field;
-                    $this->setOption('viewMapping', $mapping);
                 }
                 break;
             }
         }
+        $this->setOption('viewMapping', $mapping);
         return $value ?? null;
     }
 
@@ -210,16 +219,15 @@ abstract class View extends Entity
         if ($relations) {
             array_unshift($relations, $this->model());
             foreach ($fields as $field) {
-                if (!isset($mapping[$field])) {
-                    foreach ($relations as $relation) {
-                        if (is_object($relation)) {
-                            if ($relation->getFieldType($field)) {
-                                break;
-                            }
-                        } elseif ($this->model()->$relation()->getFieldType($field)) {
-                            $mapping[$field] = $relation . '->' . $field;
-                            break;
-                        }
+                if (isset($mapping[$field])) {
+                    continue;
+                }
+                foreach ($relations as $relation) {
+                    if (is_object($relation) && $relation->getFieldType($field)) {
+                        break;
+                    } elseif (is_string($relation) && !strpos($relation, '.') && $this->model()->$relation()->getFieldType($field)) {
+                        $mapping[$field] = $relation . '->' . $field;
+                        break;
                     }
                 }
             }
