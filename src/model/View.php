@@ -248,26 +248,27 @@ abstract class View extends Entity
      * 设置视图模型数据
      *
      * @param array|object $data 数据
-     * @param array|string $scene 验证场景
+     * @param mixed $validate 是否验证数据
      * @return $this
      */
-    public function data(array | object $data, string | array $scene = '')
+    public function data(array | object $data, $validate = false)
     {
         // 处理对象数据
         if (is_object($data)) {
             $data = get_object_vars($data);
         }
 
-        if ($scene) {
-            // 指定验证场景
-            $this->scene($scene);
+        foreach ($this->getEntityProperties() as $field) {
+            $this->$field = $data[$field] ?? null;
         }
 
         // 验证数据
-        if ($this->validate($data)) {
-            foreach ($this->getEntityProperties() as $field) {
-                $this->$field = $data[$field] ?? null;
+        if ($validate) {
+            if (!is_bool($validate)) {
+                // 指定验证场景
+                $this->scene($validate);
             }
+            $this->validate();
         }
 
         return $this;
@@ -500,17 +501,21 @@ abstract class View extends Entity
     /**
      * 验证视图模型数据. 
      *
-     * @param array $data 数据
      * @throws ValidateException
      * @return bool
      */
-    protected function validate(array $data): bool
+    protected function validate(): bool
     {
         $validater = $this->getOption('validate');
-        if (!empty($validater)) {
-            return validate($validater)
+        if (!empty($validater) && !$this->getOption('dataHasValidate', false)) {
+            $data   = $this->getData();
+            $result = validate($validater)
                 ->scene($this->getOption('scene') ?: array_keys($data))
                 ->check($data);
+            if ($result) {
+                $this->setOption('dataHasValidate', true);
+            }
+            return $result;
         }
         return true;
     }
@@ -549,10 +554,9 @@ abstract class View extends Entity
     {
         if ($data) {
             $this->data($data);
-        } else {
-            // 验证数据
-            $this->validate($this->getData());
         }
+        // 验证数据
+        $this->validate();
 
         // 根据映射关系转换为实际模型数据
         $data = $this->convertData();
