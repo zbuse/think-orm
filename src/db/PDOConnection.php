@@ -756,7 +756,7 @@ abstract class PDOConnection extends Connection
 
         if ($sql instanceof Closure) {
             $sql  = $sql($query);
-            $bind = $query->getBind();
+            $bind = array_merge($bind, $query->getBind());
         }
 
         if (!isset($master)) {
