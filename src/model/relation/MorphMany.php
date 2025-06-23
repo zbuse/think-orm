@@ -298,16 +298,25 @@ class MorphMany extends Relation
             $this->query->removeOption('limit');
         }
 
+        if ($this->isOneofMany) {
+            // 仅获取一条关联数据
+            if (!$collection) {
+                $this->query->limit(1);
+            } else {
+                $withLimit = 1;
+            }
+        }
+
         $method = ($subRelation || !empty($cache)) ? 'select' : 'cursor';
         $list   = $this->query
             ->where($where)
             ->with($subRelation)
             ->cache($cache[0] ?? false, $cache[1] ?? null, $cache[2] ?? null)
             ->$method();
-        $morphKey = $this->morphKey;
 
         // 组装模型数据
-        $data = [];
+        $data     = [];
+        $morphKey = $this->morphKey;
         foreach ($list as $set) {
             $key = $set->$morphKey;
 

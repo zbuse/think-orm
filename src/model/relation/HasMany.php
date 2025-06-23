@@ -217,6 +217,14 @@ class HasMany extends Relation
             $this->query->removeOption('limit');
         }
 
+        if ($this->isOneofMany) {
+            if (!$collection) {
+                $this->query->limit(1);
+            } else {
+                $withLimit = 1;
+            }
+        }
+
         $method = ($subRelation || !empty($cache)) ? 'select' : 'cursor';
         $list   = $this->query
             ->where($where)

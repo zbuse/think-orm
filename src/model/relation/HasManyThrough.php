@@ -88,7 +88,6 @@ class HasManyThrough extends Relation
         return $this->query->relation($subRelation)->select();
     }
 
-
     /**
      * 根据关联条件查询当前模型.
      *
@@ -257,6 +256,15 @@ class HasManyThrough extends Relation
         if ($withLimit && $collection) {
             $this->query->removeOption('limit');
         }
+
+        if ($this->isOneofMany) {
+            if (!$collection) {
+                $this->query->limit(1);
+            } else {
+                $withLimit = 1;
+            }
+        }
+
         $method = ($subRelation || !empty($cache)) ? 'select' : 'cursor';
         $list   = $this->query
             ->where($throughKey, 'in', $keys)

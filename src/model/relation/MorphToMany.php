@@ -255,6 +255,15 @@ class MorphToMany extends BelongsToMany
             $this->query->removeOption('limit');
         }
 
+        if ($this->isOneofMany) {
+            // 仅获取一条关联数据
+            if (!$collection) {
+                $this->query->limit(1);
+            } else {
+                $withLimit = 1;
+            }
+        }
+
         // 预载入关联查询 支持嵌套预载入
         $method = ($subRelation || !empty($cache)) ? 'select' : 'cursor';
         $list   = $this->belongsToManyQuery($this->foreignKey, $this->localKey, $where)
