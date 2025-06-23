@@ -248,18 +248,28 @@ abstract class View extends Entity
      * 设置视图模型数据
      *
      * @param array|object $data 数据
+     * @param array|string $scene 验证场景
      * @return $this
      */
-    public function data(array | object $data)
+    public function data(array | object $data, string | array $scene = '')
     {
         // 处理对象数据
         if (is_object($data)) {
             $data = get_object_vars($data);
         }
 
-        foreach ($this->getEntityProperties() as $field) {
-            $this->$field = $data[$field] ?? null;
+        if ($scene) {
+            // 指定验证场景
+            $this->scene($scene);
         }
+
+        // 验证数据
+        if ($this->validate($data)) {
+            foreach ($this->getEntityProperties() as $field) {
+                $this->$field = $data[$field] ?? null;
+            }
+        }
+
         return $this;
     }
 
@@ -539,12 +549,13 @@ abstract class View extends Entity
     {
         if ($data) {
             $this->data($data);
+        } else {
+            // 验证数据
+            $this->validate($this->getData());
         }
+
         // 根据映射关系转换为实际模型数据
         $data = $this->convertData();
-
-        // 验证数据
-        $this->validate($this->getOption('validateMappingData') ? $data : $this->getData());
 
         // 处理自动时间字段数据
         foreach ($this->model()->getAutoTimeFields() as $field) {
