@@ -314,42 +314,6 @@ abstract class View extends Entity
     }
 
     /**
-     * 设置需要附加的输出属性.（视图模型下无效）
-     *
-     * @param array $append 属性列表
-     *
-     * @return $this
-     */
-    public function append(array $append)
-    {
-        return $this;
-    }
-
-    /**
-     * 设置需要隐藏的输出属性.（视图模型下无效）
-     *
-     * @param array $hidden 属性列表
-     *
-     * @return $this
-     */
-    public function hidden(array $hidden)
-    {
-        return $this;
-    }
-
-    /**
-     * 设置需要输出的属性.（视图模型下无效）
-     *
-     * @param array $visible
-     *
-     * @return $this
-     */
-    public function visible(array $visible)
-    {
-        return $this;
-    }
-
-    /**
      * 判断数据是否为空.
      *
      * @return bool
@@ -438,7 +402,7 @@ abstract class View extends Entity
      *
      * @return array
      */
-    protected function convertData(): array
+    private function convertData(): array
     {
         // 获取属性映射
         $properties = $this->getEntityPropertiesMap();
@@ -504,7 +468,7 @@ abstract class View extends Entity
      * @throws ValidateException
      * @return bool
      */
-    protected function validate(): bool
+    private function validate(): bool
     {
         $validater = $this->getOption('validate');
         if (!empty($validater) && !$this->getOption('dataHasValidate', false)) {
@@ -768,6 +732,11 @@ abstract class View extends Entity
 
     public function __call($method, $args)
     {
+        if (in_array($method, ['hidden', 'visible', 'append'])) {
+            // 不支持输出设置
+            return $this;
+        }
+
         // 调用Model类方法
         $result = call_user_func_array([$this->model(), $method], $args);
         return $result instanceof Model ? $this : $result;
