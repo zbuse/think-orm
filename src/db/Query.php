@@ -606,7 +606,11 @@ class Query extends BaseQuery
 
         $limit   = (int)$this->getOption('limit', 0);
         $column  = $column ?: $this->getPk();
-        $this->order($column, $order)->limit($count > $limit ? $limit : $count);
+        if ( 0 == $limit || $count < $limit) {
+            $this->removeOption('order')
+                ->order($column, $order)
+                ->limit($count > $limit ? $limit : $count);
+        }
 
         $options   = $this->getOptions();
         $bind      = $this->bind;
