@@ -621,12 +621,15 @@ class Query extends BaseQuery
             foreach ($resultSet as $item) {
                 yield $item;
                 $times++;
+                if ($limit > $count && $times >= $limit) {
+                    break 2;
+                }
                 if (!isset($page)) {
                     $lastId = $item[$column];
                 }
             }
 
-            if (count($resultSet) < $count || ($limit && $times >= $limit)) {
+            if (count($resultSet) < $count) {
                 break;
             }
 
