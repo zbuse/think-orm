@@ -604,34 +604,42 @@ class Query extends BaseQuery
             throw new Exception('The chunk size should be at least 1');
         }
 
-        $limit   = (int)$this->getOption('limit', 0);
+        $limit   = (int) $this->getOption('limit', 0);
         $column  = $column ?: $this->getPk();
-        if ( 0 == $limit || $count < $limit) {
-            $this->removeOption('order')
-                ->order($column, $order)
-                ->limit($count > $limit ? $limit : $count);
+        $length  = $limit && $count >= $limit ? $limit : $count;
+        $options = $this->getOptions();
+        $bind    = $this->bind;
+        $times   = 0;
+        if ($this->getOption('order') || is_array($column)) {
+            $page      = 1;
+            $resultSet = $this->options($options)->page($page, $length)->select();
+        } else {
+            $resultSet = $this->options($options)->order($column, $order)->limit($length)->select();
         }
-
-        $options   = $this->getOptions();
-        $bind      = $this->bind;
-        $times     = 0;
-        $resultSet = $this->options($options)->select();
 
         while (true) {
             foreach ($resultSet as $item) {
                 yield $item;
-                $lastId = $item[$column];
                 $times++;
+                if (!isset($page)) {
+                    $lastId = $item[$column];
+                }
             }
 
             if (count($resultSet) < $count || ($limit && $times >= $limit)) {
                 break;
             }
 
-            $resultSet = $this->options($options)
-                ->where($column, 'asc' == strtolower($order) ? '>' : '<', $lastId)
-                ->bind($bind)
-                ->select();
+            if (isset($page)) {
+                $page++;
+                $query = $this->options($options)->page($page, $length);
+            } else {
+                $query = $this->options($options)
+                    ->where($column, 'asc' == strtolower($order) ? '>' : '<', $lastId)
+                    ->order($column, $order)
+                    ->limit($length);
+            }
+            $resultSet = $query->bind($bind)->select();
         };
     }
 }
