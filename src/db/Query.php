@@ -610,7 +610,7 @@ class Query extends BaseQuery
         $options = $this->getOptions();
         $bind    = $this->bind;
         $times   = 0;
-        if ($this->getOption('order') || is_array($column)) {
+        if ($this->getOption('order') || !is_string($column)) {
             $page      = 1;
             $resultSet = $this->options($options)->page($page, $length)->select();
         } else {
