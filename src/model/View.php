@@ -140,7 +140,7 @@ abstract class View extends Entity
         if ($relations) {
             $mapping   = $this->getOption('viewMapping', []);
             foreach ($relations as $relation) {
-                if (isset($data[$relation]) && $data[$relation] instanceof Model::class && $this->model()->$relation->hasData($field)) {
+                if (isset($data[$relation]) && $data[$relation] instanceof Model && $this->model()->$relation->hasData($field)) {
                     $value = $this->model()->$relation->$field;
                     if (!isset($mapping[$field])) {
                         $mapping[$field] = $relation . '->' . $field;
