@@ -60,6 +60,13 @@ abstract class View extends Entity
             } elseif (strpos($field, '->')) {
                 // 关联属性或JSON字段映射
                 $this->$key = $this->getRelationMapAttr($field, $data);
+            } elseif (isset($data[$key]) && $data[$key] instanceof Collection && is_subclass_of($field, View::class)) {
+                // 关联数据集转为视图模型
+                $result = [];
+                foreach ($data[$key] as $model) {
+                    $result[] = new $field($model);
+                }
+                $this->$key = new Collection($result);
             } else {
                 // 主模型属性映射
                 $this->$key = $this->fetchViewAttr($field, $data);
@@ -133,7 +140,7 @@ abstract class View extends Entity
         if ($relations) {
             $mapping   = $this->getOption('viewMapping', []);
             foreach ($relations as $relation) {
-                if (isset($data[$relation]) && $this->model()->$relation->hasData($field)) {
+                if (isset($data[$relation]) && $data[$relation] instanceof Model::class && $this->model()->$relation->hasData($field)) {
                     $value = $this->model()->$relation->$field;
                     if (!isset($mapping[$field])) {
                         $mapping[$field] = $relation . '->' . $field;
