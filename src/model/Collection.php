@@ -27,6 +27,13 @@ use think\Paginator;
  */
 class Collection extends BaseCollection
 {
+    public function toView(string $view)
+    {
+        $this->each(function (Model $model) use($view) {
+            $model->toView($view);
+        });
+    }
+
     /**
      * 延迟预载入关联查询.
      *

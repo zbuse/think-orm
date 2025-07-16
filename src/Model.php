@@ -281,9 +281,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
     {
         $class = $model->getOption('entityClass', str_replace('\\model\\', '\\entity\\', static::class));
         if (class_exists($class) && is_subclass_of($class, Entity::class)) {
-            $entity = new $class($model);
-            $model->entity($entity);
-            return $entity;
+            return new $class($model);
         }
         return $model;
     }
