@@ -29,8 +29,8 @@ class Collection extends BaseCollection
 {
     public function toView(string $view)
     {
-        $this->each(function (Model $model) use($view) {
-            $model->toView($view);
+        return $this->map(function (Model $model) use($view) {
+            return $model->toview($view);
         });
     }
 
