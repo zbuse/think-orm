@@ -646,8 +646,10 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      */
     public static function destroy($data, bool $force = false, array $together = []): bool
     {
-        $model = new static();
-        $db    = $model->db();
+        if (empty($data) && 0 !== $data) {
+            return false;
+        }        
+        $db = (new static())->db();
 
         if (is_array($data) && key($data) !== 0) {
             $db->where($data);
