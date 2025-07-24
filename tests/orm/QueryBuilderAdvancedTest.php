@@ -248,7 +248,7 @@ class QueryBuilderAdvancedTest extends TestCase
             ->field('name, age, status')
             ->select();
 
-        $this->assertGreaterThan(0, $result);
+        $this->assertGreaterThan(0, count($result));
         
         // Verify the complex where conditions work
         foreach ($result as $user) {
@@ -269,7 +269,7 @@ class QueryBuilderAdvancedTest extends TestCase
             ->order('post_count', 'desc')
             ->select();
 
-        $this->assertGreaterThan(0, $result);
+        $this->assertGreaterThan(0, count($result));
         $this->assertArrayHasKey('post_count', $result[0]);
         $this->assertIsNumeric($result[0]['post_count']);
 
@@ -332,7 +332,7 @@ class QueryBuilderAdvancedTest extends TestCase
             ->where('is_published', 1)
             ->select();
 
-        $this->assertGreaterThan(0, $result);
+        $this->assertGreaterThan(0, count($result));
         $this->assertArrayHasKey('popularity', $result[0]);
         $this->assertContains($result[0]['popularity'], ['popular', 'normal']);
     }
@@ -347,7 +347,7 @@ class QueryBuilderAdvancedTest extends TestCase
             ->where('p.is_published', 1)
             ->select();
 
-        $this->assertGreaterThan(0, $result);
+        $this->assertGreaterThan(0, count($result));
     }
 
     public function testLimitWithOffset(): void
