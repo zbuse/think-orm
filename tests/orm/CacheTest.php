@@ -4,7 +4,7 @@ namespace tests\orm;
 
 use PHPUnit\Framework\TestCase;
 use think\db\CacheItem;
-// use think\db\exception\InvalidArgumentException;
+use think\db\exception\InvalidArgumentException;
 use DateTime;
 use DateInterval;
 use DateTimeInterface;
@@ -155,8 +155,8 @@ class CacheTest extends TestCase
     {
         $cache = new CacheItem('invalid_expire_key');
         
-        $this->expectException(\Error::class);
-        $this->expectExceptionMessage('Interface "Psr\SimpleCache\InvalidArgumentException" not found');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('not support datetime');
         
         $cache->expire('invalid_date_string');
     }
@@ -165,8 +165,8 @@ class CacheTest extends TestCase
     {
         $cache = new CacheItem('invalid_expires_after_key');
         
-        $this->expectException(\Error::class);
-        $this->expectExceptionMessage('Interface "Psr\SimpleCache\InvalidArgumentException" not found');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('not support datetime');
         
         $cache->expiresAfter('invalid_interval');
     }
