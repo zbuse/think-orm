@@ -259,7 +259,7 @@ abstract class View extends Entity
         }
 
         foreach ($this->getEntityProperties() as $field) {
-            $this->$field = $data[$field] ?? null;
+            $this->$field = $data[$field] ?? ($this->$field ?? null);
         }
 
         // 验证数据
