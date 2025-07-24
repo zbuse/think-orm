@@ -640,10 +640,11 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      *
      * @param mixed $data  主键列表 支持闭包查询条件
      * @param bool  $force 是否强制删除
+     * @param array $together 关联删除
      *
      * @return bool
      */
-    public static function destroy($data, bool $force = false): bool
+    public static function destroy($data, bool $force = false, array $together = []): bool
     {
         $model = new static();
         $db    = $model->db();
@@ -659,7 +660,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
         $resultSet = $db->select((array) $data);
 
         foreach ($resultSet as $result) {
-            $result->force($force)->delete();
+            $result->force($force)->together($together)->delete();
         }
         return true;
     }
