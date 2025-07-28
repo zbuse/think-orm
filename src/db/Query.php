@@ -504,22 +504,33 @@ class Query extends BaseQuery
     /**
      * 使用游标查找记录.
      *
-     * @param mixed $data 数据
-     *
+     * @param bool $unbuffered 是否开启无缓冲查询（仅限mysql）
+     * 
      * @return \Generator
      */
-    public function cursor($data = null)
+    public function cursor(bool $unbuffered = false)
     {
-        if (!is_null($data)) {
-            // 主键条件分析
-            $this->parsePkWhere($data);
-        }
-
-        $this->options['data'] = $data;
-
         $connection = clone $this->connection;
 
-        return $connection->cursor($this);
+        return $connection->cursor($this, $unbuffered);
+    }
+    
+    /**
+     * 流式处理查询结果
+     *
+     * @param callable $callback    处理回调
+     * @param bool     $unbuffered  是否使用无缓冲查询（仅MySQL支持）
+     *
+     * @return int 处理的记录数
+     */
+    public function stream(callable $callback, bool $unbuffered = false): int
+    {
+        $count = 0;
+        foreach ($this->cursor($unbuffered) as $item) {
+            $callback($item);
+            $count++;
+        }
+        return $count;
     }
 
     /**
