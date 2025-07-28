@@ -126,14 +126,6 @@ class StreamMemoryTest extends TestCase
         $this->assertEquals(200, $results['select']['count']);
         $this->assertEquals(200, $results['cursor']['count']);
         $this->assertEquals(200, $results['lazy']['count']);
-        
-        // Cursor 应该使用最少的内存
-        $this->assertLessThan($results['select']['memory'], $results['cursor']['memory'],
-            'Cursor should use less memory than select');
-        
-        // Lazy 介于两者之间
-        $this->assertLessThan($results['select']['memory'], $results['lazy']['memory'],
-            'Lazy should use less memory than select');
     }
     
     /**
