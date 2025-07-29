@@ -5,6 +5,7 @@ namespace tests\orm;
 use PHPUnit\Framework\TestCase;
 use think\facade\Db;
 use think\DbManager;
+use think\model\LazyCollection;
 
 class StreamQueryTest extends TestCase
 {
@@ -55,7 +56,7 @@ class StreamQueryTest extends TestCase
     {
         $cursor = Db::table('user')->cursor();
         
-        $this->assertInstanceOf(\Generator::class, $cursor);
+        $this->assertInstanceOf(LazyCollection::class, $cursor);
         
         $count = 0;
         foreach ($cursor as $user) {

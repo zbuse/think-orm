@@ -507,15 +507,17 @@ class Query extends BaseQuery
      *
      * @param bool $unbuffered 是否开启无缓冲查询（仅限mysql）
      * 
-     * @return \Generator
+     * @return LazyCollection
      */
-    public function cursor(bool $unbuffered = false)
+    public function cursor(bool $unbuffered = false): LazyCollection
     {
         $connection = clone $this->connection;
 
-        return $connection->cursor($this, $unbuffered);
+        return new LazyCollection(function () use ($connection, $unbuffered) {
+            yield from $connection->cursor($this, $unbuffered);
+        });
     }
-    
+
     /**
      * 流式处理查询结果
      *
@@ -527,10 +529,11 @@ class Query extends BaseQuery
     public function stream(callable $callback, bool $unbuffered = false): int
     {
         $count = 0;
-        foreach ($this->cursor($unbuffered) as $item) {
-            $callback($item);
-            $count++;
-        }
+        $this->cursor($unbuffered)
+            ->each(function ($item) use ($callback, &$count) {
+                $callback($item);
+                $count++;
+            });
         return $count;
     }
 
@@ -610,7 +613,7 @@ class Query extends BaseQuery
      * @param string      $order   字段排序 
      * @return LazyCollection
      */
-    public function lazy(int $count = 1000, ?string $column = null, string $order = 'desc')
+    public function lazy(int $count = 1000, ?string $column = null, string $order = 'desc'): LazyCollection
     {
         if ($count < 1) {
             throw new Exception('The chunk size should be at least 1');
