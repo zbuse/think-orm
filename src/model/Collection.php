@@ -30,7 +30,7 @@ class Collection extends BaseCollection
     public function toView(string $view)
     {
         return $this->map(function (Model $model) use($view) {
-            return $model->toview($view);
+            return $model->toView($view);
         });
     }
 

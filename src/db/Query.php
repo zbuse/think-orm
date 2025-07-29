@@ -15,6 +15,7 @@ namespace think\db;
 
 use PDOStatement;
 use think\db\exception\DbException as Exception;
+use think\model\LazyCollection;
 
 /**
  * PDO数据查询类.
@@ -607,7 +608,7 @@ class Query extends BaseQuery
      * @param int         $count   每批处理的数量
      * @param string|null $column  分批处理的字段名
      * @param string      $order   字段排序 
-     * @return \Generator
+     * @return LazyCollection
      */
     public function lazy(int $count = 1000, ?string $column = null, string $order = 'desc')
     {
@@ -615,45 +616,47 @@ class Query extends BaseQuery
             throw new Exception('The chunk size should be at least 1');
         }
 
-        $limit   = (int) $this->getOption('limit', 0);
-        $column  = $column ?: $this->getPk();
-        $length  = $limit && $count >= $limit ? $limit : $count;
-        $options = $this->getOptions();
-        $bind    = $this->bind;
-        $times   = 0;
-        if ($this->getOption('order') || !is_string($column)) {
-            $page      = 1;
-            $resultSet = $this->options($options)->page($page, $length)->select();
-        } else {
-            $resultSet = $this->options($options)->order($column, $order)->limit($length)->select();
-        }
-
-        while (true) {
-            foreach ($resultSet as $item) {
-                yield $item;
-                $times++;
-                if ($limit > $count && $times >= $limit) {
-                    break 2;
-                }
-                if (!isset($page)) {
-                    $lastId = $item[$column];
-                }
-            }
-
-            if (count($resultSet) < $count) {
-                break;
-            }
-
-            if (isset($page)) {
-                $page++;
-                $query = $this->options($options)->page($page, $length);
+        return new LazyCollection(function () use ($count, $column, $order) {
+            $limit   = (int) $this->getOption('limit', 0);
+            $column  = $column ?: $this->getPk();
+            $length  = $limit && $count >= $limit ? $limit : $count;
+            $options = $this->getOptions();
+            $bind    = $this->bind;
+            $times   = 0;
+            if ($this->getOption('order') || !is_string($column)) {
+                $page      = 1;
+                $resultSet = $this->options($options)->page($page, $length)->select();
             } else {
-                $query = $this->options($options)
-                    ->where($column, 'asc' == strtolower($order) ? '>' : '<', $lastId)
-                    ->order($column, $order)
-                    ->limit($length);
+                $resultSet = $this->options($options)->order($column, $order)->limit($length)->select();
             }
-            $resultSet = $query->bind($bind)->select();
-        };
+
+            while (true) {
+                foreach ($resultSet as $item) {
+                    yield $item;
+                    $times++;
+                    if ($limit > $count && $times >= $limit) {
+                        break 2;
+                    }
+                    if (!isset($page)) {
+                        $lastId = $item[$column];
+                    }
+                }
+
+                if (count($resultSet) < $count) {
+                    break;
+                }
+
+                if (isset($page)) {
+                    $page++;
+                    $query = $this->options($options)->page($page, $length);
+                } else {
+                    $query = $this->options($options)
+                        ->where($column, 'asc' == strtolower($order) ? '>' : '<', $lastId)
+                        ->order($column, $order)
+                        ->limit($length);
+                }
+                $resultSet = $query->bind($bind)->select();
+            }
+        });
     }
 }
