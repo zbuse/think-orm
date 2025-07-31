@@ -15,7 +15,7 @@ namespace think\db;
 
 use PDOStatement;
 use think\db\exception\DbException as Exception;
-use think\model\LazyCollection;
+use think\model\LazyCollection as ModelLazyCollection;
 
 /**
  * PDO数据查询类.
@@ -503,7 +503,7 @@ class Query extends BaseQuery
     }
 
     /**
-     * 使用游标查找记录.
+     * 使用游标查找记录.（不支持关联查询和查询缓存）
      *
      * @param bool $unbuffered 是否开启无缓冲查询（仅限mysql）
      * 
@@ -513,13 +513,14 @@ class Query extends BaseQuery
     {
         $connection = clone $this->connection;
 
-        return new LazyCollection(function () use ($connection, $unbuffered) {
+        $class = $this->model ? ModelLazyCollection::class : LazyCollection::class;
+        return new $class(function () use ($connection, $unbuffered) {
             yield from $connection->cursor($this, $unbuffered);
         });
     }
 
     /**
-     * 流式处理查询结果
+     * 流式处理查询结果（不支持关联查询和查询缓存）
      *
      * @param callable $callback    处理回调
      * @param bool     $unbuffered  是否使用无缓冲查询（仅MySQL支持）
@@ -618,8 +619,8 @@ class Query extends BaseQuery
         if ($count < 1) {
             throw new Exception('The chunk size should be at least 1');
         }
-
-        return new LazyCollection(function () use ($count, $column, $order) {
+        $class = $this->model ? ModelLazyCollection::class : LazyCollection::class;
+        return new $class(function () use ($count, $column, $order) {
             $limit   = (int) $this->getOption('limit', 0);
             $column  = $column ?: $this->getPk();
             $length  = $limit && $count >= $limit ? $limit : $count;

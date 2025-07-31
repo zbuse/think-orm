@@ -4,7 +4,7 @@ namespace tests\orm;
 
 use PHPUnit\Framework\TestCase;
 use think\facade\Db;
-use think\model\LazyCollection;
+use think\db\LazyCollection;
 
 class LazyQueryTest extends TestCase
 {

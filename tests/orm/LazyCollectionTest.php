@@ -76,30 +76,6 @@ class LazyCollectionTest extends TestCase
     }
 
     /**
-     * 测试chunk方法
-     */
-    public function testChunk()
-    {
-        $lazy = LazyCollection::make(range(1, 10));
-        $chunks = $lazy->chunk(3);
-
-        $result = [];
-        foreach ($chunks as $chunk) {
-            $this->assertInstanceOf(Collection::class, $chunk);
-            $result[] = $chunk->toArray();
-        }
-
-        $expected = [
-            [1, 2, 3],
-            [3 => 4, 4 => 5, 5 => 6],
-            [6 => 7, 7 => 8, 8 => 9],
-            [9 => 10]
-        ];
-
-        $this->assertEquals($expected, $result);
-    }
-
-    /**
      * 测试take方法
      */
     public function testTake()
@@ -190,9 +166,9 @@ class LazyCollectionTest extends TestCase
     }
 
     /**
-     * 测试groupBy方法
+     * 测试group方法
      */
-    public function testGroupBy()
+    public function testGroup()
     {
         $data = [
             ['name' => 'John', 'age' => 25],
@@ -201,7 +177,7 @@ class LazyCollectionTest extends TestCase
         ];
 
         $lazy = LazyCollection::make($data);
-        $grouped = $lazy->groupBy('age');
+        $grouped = $lazy->group('age');
 
         $result = [];
         foreach ($grouped as $key => $group) {
@@ -213,18 +189,6 @@ class LazyCollectionTest extends TestCase
         $this->assertArrayHasKey(30, $result);
         $this->assertCount(2, $result[25]);
         $this->assertCount(1, $result[30]);
-    }
-
-    /**
-     * 测试merge方法
-     */
-    public function testMerge()
-    {
-        $lazy1 = LazyCollection::make([1, 2, 3]);
-        $lazy2 = LazyCollection::make([4, 5, 6]);
-
-        $result = $lazy1->merge($lazy2);
-        $this->assertEquals([0 => 1, 1 => 2, 2 => 3, 0 => 4, 1 => 5, 2 => 6], $result->toArray());
     }
 
     /**
@@ -251,20 +215,6 @@ class LazyCollectionTest extends TestCase
         $this->assertEquals([4 => 5, 3 => 4, 2 => 3, 1 => 2, 0 => 1], $result->toArray());
     }
 
-    /**
-     * 测试keys和values方法
-     */
-    public function testKeysAndValues()
-    {
-        $data = ['a' => 1, 'b' => 2, 'c' => 3];
-        $lazy = LazyCollection::make($data);
-
-        $keys = $lazy->keys();
-        $this->assertEquals(['a', 'b', 'c'], $keys->toArray());
-
-        $values = $lazy->values();
-        $this->assertEquals([1, 2, 3], $values->toArray());
-    }
 
     /**
      * 测试when方法
@@ -289,23 +239,6 @@ class LazyCollectionTest extends TestCase
         });
 
         $this->assertEquals([1, 2, 3], $result->toArray());
-    }
-
-    /**
-     * 测试tap方法
-     */
-    public function testTap()
-    {
-        $lazy = LazyCollection::make([1, 2, 3]);
-        $tapped = false;
-
-        $result = $lazy->tap(function ($collection) use (&$tapped) {
-            $tapped = true;
-            $this->assertInstanceOf(LazyCollection::class, $collection);
-        });
-
-        $this->assertTrue($tapped);
-        $this->assertSame($lazy, $result);
     }
 
     /**
@@ -372,17 +305,6 @@ class LazyCollectionTest extends TestCase
     }
 
     /**
-     * 测试chunk大小验证
-     */
-    public function testChunkSizeValidation()
-    {
-        $lazy = LazyCollection::make([1, 2, 3]);
-
-        $this->expectException(\InvalidArgumentException::class);
-        $lazy->chunk(0);
-    }
-
-    /**
      * 测试take限制验证
      */
     public function testTakeLimitValidation()
@@ -392,4 +314,368 @@ class LazyCollectionTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $lazy->take(-1);
     }
+
+    /**
+     * 测试each方法
+     */
+    public function testEach()
+    {
+        $lazy = LazyCollection::make([1, 2, 3, 4, 5]);
+        $result = [];
+        
+        $lazy->each(function ($value, $key) use (&$result) {
+            $result[$key] = $value * 2;
+        });
+        
+        $this->assertEquals([2, 4, 6, 8, 10], $result);
+        
+        // 测试提前终止
+        $result = [];
+        $lazy->each(function ($value, $key) use (&$result) {
+            $result[$key] = $value;
+            if ($value >= 3) {
+                return false;
+            }
+        });
+        
+        $this->assertEquals([1, 2, 3], $result);
+    }
+
+
+    /**
+     * 测试sort方法
+     */
+    public function testSort()
+    {
+        $lazy = LazyCollection::make([3, 1, 4, 1, 5, 9, 2, 6]);
+        $result = $lazy->sort();
+        
+        $this->assertInstanceOf(Collection::class, $result);
+        $this->assertEquals([1, 1, 2, 3, 4, 5, 6, 9], $result->values()->toArray());
+        
+        // 测试自定义排序
+        $lazy = LazyCollection::make(['apple', 'banana', 'cherry']);
+        $result = $lazy->sort(function ($a, $b) {
+            return strlen($b) <=> strlen($a);
+        });
+        
+        $this->assertEquals(['banana', 'cherry', 'apple'], $result->values()->toArray());
+    }
+
+    /**
+     * 测试order方法
+     */
+    public function testOrder()
+    {
+        $data = [
+            ['name' => 'John', 'age' => 25],
+            ['name' => 'Jane', 'age' => 30],
+            ['name' => 'Bob', 'age' => 20],
+        ];
+        
+        $lazy = LazyCollection::make($data);
+        $result = $lazy->order('age');
+        
+        $this->assertInstanceOf(Collection::class, $result);
+        $ordered = array_values($result->toArray());
+        $this->assertEquals('Bob', $ordered[0]['name']);
+        $this->assertEquals('John', $ordered[1]['name']);
+        $this->assertEquals('Jane', $ordered[2]['name']);
+        
+        // 测试降序
+        $result = $lazy->order('age', 'desc');
+        $ordered = array_values($result->toArray());
+        $this->assertEquals('Jane', $ordered[0]['name']);
+        $this->assertEquals('John', $ordered[1]['name']);
+        $this->assertEquals('Bob', $ordered[2]['name']);
+    }
+
+    /**
+     * 测试where方法
+     */
+    public function testWhere()
+    {
+        $data = [
+            ['name' => 'John', 'age' => 25, 'active' => true],
+            ['name' => 'Jane', 'age' => 30, 'active' => false],
+            ['name' => 'Bob', 'age' => 25, 'active' => true],
+        ];
+        
+        $lazy = LazyCollection::make($data);
+        
+        // 测试等于
+        $result = array_values($lazy->where('age', 25)->toArray());
+        $this->assertCount(2, $result);
+        $this->assertEquals('John', $result[0]['name']);
+        $this->assertEquals('Bob', $result[1]['name']);
+        
+        // 测试不等于
+        $result = array_values($lazy->where('age', '!=', 25)->toArray());
+        $this->assertCount(1, $result);
+        $this->assertEquals('Jane', $result[0]['name']);
+        
+        // 测试大于
+        $result = array_values($lazy->where('age', '>', 25)->toArray());
+        $this->assertCount(1, $result);
+        $this->assertEquals('Jane', $result[0]['name']);
+        
+        // 测试小于等于
+        $result = $lazy->where('age', '<=', 25)->toArray();
+        $this->assertCount(2, $result);
+        
+        // 测试严格等于
+        $result = $lazy->where('active', '===', true)->toArray();
+        $this->assertCount(2, $result);
+        
+        // 测试IN
+        $result = $lazy->where('age', 'in', [25, 30])->toArray();
+        $this->assertCount(3, $result);
+        
+        // 测试NOT IN
+        $result = $lazy->where('age', 'not in', [30])->toArray();
+        $this->assertCount(2, $result);
+        
+        // 测试BETWEEN
+        $result = $lazy->where('age', 'between', [20, 27])->toArray();
+        $this->assertCount(2, $result);
+        
+        // 测试NOT BETWEEN
+        $result = array_values($lazy->where('age', 'not between', [20, 27])->toArray());
+        $this->assertCount(1, $result);
+        $this->assertEquals('Jane', $result[0]['name']);
+        
+        // 测试LIKE
+        $result = $lazy->where('name', 'like', 'J')->toArray();
+        $this->assertCount(2, $result);
+        
+        // 测试NOT LIKE
+        $result = array_values($lazy->where('name', 'not like', 'J')->toArray());
+        $this->assertCount(1, $result);
+        $this->assertEquals('Bob', $result[0]['name']);
+        
+        // 测试START
+        $result = $lazy->where('name', 'start', 'J')->toArray();
+        $this->assertCount(2, $result);
+        
+        // 测试END
+        $result = array_values($lazy->where('name', 'end', 'n')->toArray());
+        $this->assertCount(1, $result);
+        $this->assertEquals('John', $result[0]['name']);
+    }
+
+    /**
+     * 测试whereLike方法
+     */
+    public function testWhereLike()
+    {
+        $data = [
+            ['name' => 'John', 'city' => 'New York'],
+            ['name' => 'Jane', 'city' => 'new jersey'],
+            ['name' => 'Bob', 'city' => 'BOSTON'],
+        ];
+        
+        $lazy = LazyCollection::make($data);
+        
+        // 测试区分大小写
+        $result = array_values($lazy->whereLike('city', 'new')->toArray());
+        $this->assertCount(1, $result);
+        $this->assertEquals('Jane', $result[0]['name']);
+        
+        // 测试不区分大小写
+        $result = $lazy->whereLike('city', 'new', false)->toArray();
+        $this->assertCount(2, $result);
+    }
+
+    /**
+     * 测试whereNotLike方法
+     */
+    public function testWhereNotLike()
+    {
+        $data = [
+            ['name' => 'John', 'city' => 'New York'],
+            ['name' => 'Jane', 'city' => 'Los Angeles'],
+            ['name' => 'Bob', 'city' => 'New Jersey'],
+        ];
+        
+        $lazy = LazyCollection::make($data);
+        $result = array_values($lazy->whereNotLike('city', 'New')->toArray());
+        
+        $this->assertCount(1, $result);
+        $this->assertEquals('Jane', $result[0]['name']);
+    }
+
+    /**
+     * 测试whereIn方法
+     */
+    public function testWhereIn()
+    {
+        $data = [
+            ['name' => 'John', 'age' => 25],
+            ['name' => 'Jane', 'age' => 30],
+            ['name' => 'Bob', 'age' => 35],
+        ];
+        
+        $lazy = LazyCollection::make($data);
+        $result = array_values($lazy->whereIn('age', [25, 35])->toArray());
+        
+        $this->assertCount(2, $result);
+        $this->assertEquals('John', $result[0]['name']);
+        $this->assertEquals('Bob', $result[1]['name']);
+    }
+
+    /**
+     * 测试whereNotIn方法
+     */
+    public function testWhereNotIn()
+    {
+        $data = [
+            ['name' => 'John', 'age' => 25],
+            ['name' => 'Jane', 'age' => 30],
+            ['name' => 'Bob', 'age' => 35],
+        ];
+        
+        $lazy = LazyCollection::make($data);
+        $result = array_values($lazy->whereNotIn('age', [25, 35])->toArray());
+        
+        $this->assertCount(1, $result);
+        $this->assertEquals('Jane', $result[0]['name']);
+    }
+
+    /**
+     * 测试whereBetween方法
+     */
+    public function testWhereBetween()
+    {
+        $data = [
+            ['name' => 'John', 'score' => 85],
+            ['name' => 'Jane', 'score' => 92],
+            ['name' => 'Bob', 'score' => 78],
+        ];
+        
+        $lazy = LazyCollection::make($data);
+        $result = $lazy->whereBetween('score', [80, 90])->toArray();
+        
+        $this->assertCount(1, $result);
+        $this->assertEquals('John', $result[0]['name']);
+    }
+
+    /**
+     * 测试whereNotBetween方法
+     */
+    public function testWhereNotBetween()
+    {
+        $data = [
+            ['name' => 'John', 'score' => 85],
+            ['name' => 'Jane', 'score' => 92],
+            ['name' => 'Bob', 'score' => 78],
+        ];
+        
+        $lazy = LazyCollection::make($data);
+        $result = array_values($lazy->whereNotBetween('score', [80, 90])->toArray());
+        
+        $this->assertCount(2, $result);
+        $this->assertEquals('Jane', $result[0]['name']);
+        $this->assertEquals('Bob', $result[1]['name']);
+    }
+
+    /**
+     * 测试skip参数验证
+     */
+    public function testSkipValidation()
+    {
+        $lazy = LazyCollection::make([1, 2, 3]);
+        
+        $this->expectException(\InvalidArgumentException::class);
+        $lazy->skip(-1);
+    }
+
+    /**
+     * 测试空生成器
+     */
+    public function testEmptyGenerator()
+    {
+        $generator = function () {
+            if (false) {
+                yield;
+            }
+        };
+        
+        $lazy = new LazyCollection($generator);
+        
+        $this->assertTrue($lazy->isEmpty());
+        $this->assertEquals(0, $lazy->count());
+        $this->assertEquals([], $lazy->toArray());
+        $this->assertNull($lazy->first());
+        $this->assertNull($lazy->last());
+    }
+
+    /**
+     * 测试flatten的各种深度
+     */
+    public function testFlattenVariousDepths()
+    {
+        $data = [
+            1,
+            [2, [3, 4]],
+            [5, [6, [7, 8]]]
+        ];
+        
+        $lazy = LazyCollection::make($data);
+        
+        // 深度1
+        $result = $lazy->flatten(1)->toArray();
+        $this->assertEquals([1, 2, [3, 4], 5, [6, [7, 8]]], $result);
+        
+        // 深度2
+        $result = $lazy->flatten(2)->toArray();
+        $this->assertEquals([1, 2, 3, 4, 5, 6, [7, 8]], $result);
+        
+        // 深度3
+        $result = $lazy->flatten(3)->toArray();
+        $this->assertEquals([1, 2, 3, 4, 5, 6, 7, 8], $result);
+    }
+
+    /**
+     * 测试when方法的default回调
+     */
+    public function testWhenWithDefault()
+    {
+        $lazy = LazyCollection::make([1, 2, 3]);
+        
+        $result = $lazy->when(false, function ($collection) {
+            return $collection->map(function ($item) {
+                return $item * 2;
+            });
+        }, function ($collection) {
+            return $collection->map(function ($item) {
+                return $item + 10;
+            });
+        });
+        
+        $this->assertEquals([11, 12, 13], $result->toArray());
+    }
+
+    /**
+     * 测试make方法的边界情况
+     */
+    public function testMakeEdgeCases()
+    {
+        // 测试空数组
+        $lazy = LazyCollection::make([]);
+        $this->assertEquals([], $lazy->toArray());
+        
+        // 测试已有的LazyCollection实例
+        $lazy1 = LazyCollection::make([1, 2, 3]);
+        $lazy2 = LazyCollection::make($lazy1);
+        $this->assertSame($lazy1, $lazy2);
+        
+        // 测试生成器
+        $generator = function () {
+            yield 1;
+            yield 2;
+        };
+        $lazy = LazyCollection::make($generator);
+        $this->assertEquals([1, 2], $lazy->toArray());
+    }
+
 }

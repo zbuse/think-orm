@@ -5,6 +5,8 @@ namespace tests\orm;
 use PHPUnit\Framework\TestCase;
 use think\Model;
 use think\facade\Db;
+use think\db\LazyCollection;
+use think\model\LazyCollection as ModelLazyCollection;
 
 /**
  * 测试User模型
@@ -185,4 +187,121 @@ class StreamModelTest extends TestCase
         
         $this->assertEquals(5, $count);
     }
+
+    /**
+     * 测试cursor方法的返回类型
+     */
+    public function testCursorReturnType()
+    {
+        $result = StreamTestUser::cursor();
+        
+        // 测试返回的是LazyCollection实例
+        $this->assertInstanceOf(LazyCollection::class, $result);
+        
+        // 测试可以遍历并返回Model实例
+        $count = 0;
+        foreach ($result->take(5) as $user) {
+            $this->assertInstanceOf(StreamTestUser::class, $user);
+            $this->assertIsInt($user->id);
+            $this->assertIsString($user->name);
+            $count++;
+        }
+        
+        $this->assertEquals(5, $count);
+    }
+
+    /**
+     * 测试lazy方法的返回类型
+     */
+    public function testLazyReturnType()
+    {
+        $result = StreamTestUser::lazy(10);
+        
+        // 测试返回的是LazyCollection实例
+        $this->assertInstanceOf(LazyCollection::class, $result);
+        
+        // 测试可以遍历并返回Model实例
+        $count = 0;
+        foreach ($result as $user) {
+            $this->assertInstanceOf(StreamTestUser::class, $user);
+            $this->assertIsInt($user->id);
+            $this->assertIsString($user->name);
+            $count++;
+            if ($count >= 10) break;
+        }
+        
+        $this->assertEquals(10, $count);
+    }
+
+    /**
+     * 测试lazy方法的分页功能
+     */
+    public function testLazyWithPaging()
+    {
+        // 测试使用ID列进行分页
+        $result = StreamTestUser::lazy(5, 'id', 'asc');
+        $this->assertInstanceOf(LazyCollection::class, $result);
+        
+        $count = 0;
+        $lastId = 0;
+        foreach ($result as $user) {
+            $this->assertInstanceOf(StreamTestUser::class, $user);
+            $this->assertGreaterThan($lastId, $user->id);
+            $lastId = $user->id;
+            $count++;
+            if ($count >= 15) break; // 获取3页数据
+        }
+        
+        $this->assertEquals(15, $count);
+    }
+
+    /**
+     * 测试LazyCollection的load方法
+     */
+    public function testLazyCollectionLoad()
+    {
+        // 创建包含用户数据的LazyCollection
+        $lazy = StreamTestUser::limit(10)->cursor();
+        
+        // 测试load方法返回新的LazyCollection
+        $loaded = $lazy->load(['profile']);
+        $this->assertInstanceOf(LazyCollection::class, $loaded);
+        
+        // 测试预载入的关联数据
+        $count = 0;
+        foreach ($loaded as $user) {
+            $this->assertInstanceOf(StreamTestUser::class, $user);
+            // 访问profile应该已经预载入
+            $this->assertInstanceOf(StreamTestProfile::class, $user->profile);
+            $this->assertEquals($user->id, $user->profile->user_id);
+            $count++;
+        }
+        
+        $this->assertEquals(10, $count);
+    }
+
+    /**
+     * 测试LazyCollection的load方法带缓存
+     */
+    public function testLazyCollectionLoadWithCache()
+    {
+        $lazy = StreamTestUser::limit(5)->cursor();
+        
+        // 测试带缓存的load方法
+        $loaded = $lazy->load(['articles'], true);
+        $this->assertInstanceOf(LazyCollection::class, $loaded);
+        
+        // 测试预载入的articles关联
+        $count = 0;
+        foreach ($loaded as $user) {
+            $this->assertInstanceOf(StreamTestUser::class, $user);
+            // 访问articles应该已经预载入
+            $this->assertInstanceOf(\think\model\Collection::class, $user->articles);
+            $this->assertGreaterThan(0, count($user->articles));
+            $count++;
+        }
+        
+        $this->assertEquals(5, $count);
+    }
+
 }
