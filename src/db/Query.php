@@ -558,18 +558,13 @@ class Query extends BaseQuery
 
         $options = $this->getOptions();
         $column  = $column ?: $this->getPk();
+        $bind    = $this->bind;
 
-        if (isset($options['order'])) {
-            unset($options['order']);
-        }
-
-        $bind = $this->bind;
-
-        if (is_array($column)) {
+        if ($this->getOption('order') || !is_string($column)) {
             $times = 1;
-            $query = $this->options($options)->page($times, $count);
+            $resultSet = $this->options($options)->page($times, $count)->select();
         } else {
-            $query = $this->options($options)->limit($count);
+            $resultSet = $this->options($options)->order($column, $order)->limit($count)->select();
 
             if (str_contains($column, '.')) {
                 [$alias, $key] = explode('.', $column);
@@ -577,8 +572,6 @@ class Query extends BaseQuery
                 $key = $column;
             }
         }
-
-        $resultSet = $query->order($column, $order)->select();
 
         while (true) {
             if (false === call_user_func($callback, $resultSet)) {
@@ -619,6 +612,7 @@ class Query extends BaseQuery
         if ($count < 1) {
             throw new Exception('The chunk size should be at least 1');
         }
+
         $class = $this->model ? ModelLazyCollection::class : LazyCollection::class;
         return new $class(function () use ($count, $column, $order) {
             $limit   = (int) $this->getOption('limit', 0);
