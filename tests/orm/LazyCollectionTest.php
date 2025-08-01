@@ -678,4 +678,119 @@ class LazyCollectionTest extends TestCase
         $this->assertEquals([1, 2], $lazy->toArray());
     }
 
+    /**
+     * 测试page方法
+     */
+    public function testPage()
+    {
+        $lazy = LazyCollection::make(range(1, 20));
+        
+        // 测试第一页
+        $page1 = $lazy->page(1, 5);
+        $this->assertEquals([1, 2, 3, 4, 5], $page1->toArray());
+        
+        // 测试第二页
+        $page2 = $lazy->page(2, 5);
+        $this->assertEquals([5 => 6, 6 => 7, 7 => 8, 8 => 9, 9 => 10], $page2->toArray());
+        
+        // 测试第三页
+        $page3 = $lazy->page(3, 5);
+        $this->assertEquals([10 => 11, 11 => 12, 12 => 13, 13 => 14, 14 => 15], $page3->toArray());
+        
+        // 测试最后一页
+        $page4 = $lazy->page(4, 5);
+        $this->assertEquals([15 => 16, 16 => 17, 17 => 18, 18 => 19, 19 => 20], $page4->toArray());
+        
+        // 测试超出范围的页码
+        $page5 = $lazy->page(5, 5);
+        $this->assertEquals([], $page5->toArray());
+        
+        // 测试默认每页数量
+        $pageDefault = $lazy->page(1);
+        $this->assertCount(15, $pageDefault->toArray());
+    }
+
+    /**
+     * 测试page方法的异常情况
+     */
+    public function testPageValidation()
+    {
+        $lazy = LazyCollection::make(range(1, 10));
+        
+        // 测试无效的页码
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Page should be at least 1');
+        $lazy->page(0, 5);
+    }
+
+    /**
+     * 测试page方法的每页数量验证
+     */
+    public function testPagePerPageValidation()
+    {
+        $lazy = LazyCollection::make(range(1, 10));
+        
+        // 测试无效的每页数量
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Per page should be at least 1');
+        $lazy->page(1, 0);
+    }
+
+    /**
+     * 测试page方法与其他方法的链式调用
+     */
+    public function testPageChaining()
+    {
+        $lazy = LazyCollection::make(range(1, 30));
+        
+        // 先过滤再分页
+        $result = $lazy
+            ->filter(function ($value) {
+                return $value % 2 == 0;
+            })
+            ->page(2, 5)
+            ->toArray();
+        
+        // 第二页应该是 12, 14, 16, 18, 20
+        $this->assertEquals([11 => 12, 13 => 14, 15 => 16, 17 => 18, 19 => 20], $result);
+        
+        // 先分页再映射
+        $result = $lazy
+            ->page(1, 3)
+            ->map(function ($value) {
+                return $value * 10;
+            })
+            ->toArray();
+        
+        $this->assertEquals([10, 20, 30], $result);
+    }
+
+    /**
+     * 测试page方法的惰性执行
+     */
+    public function testPageLaziness()
+    {
+        $count = 0;
+        $generator = function () use (&$count) {
+            for ($i = 1; $i <= 100; $i++) {
+                $count++;
+                yield $i;
+            }
+        };
+        
+        $lazy = new LazyCollection($generator);
+        $page = $lazy->page(2, 10);
+        
+        // 还没有执行，不应该生成任何元素
+        $this->assertEquals(0, $count);
+        
+        // 转换为数组时才执行
+        $result = $page->toArray();
+        
+        // 应该只生成到第20个元素（跳过10个，获取10个）
+        // 注意：由于skip的实现方式，需要先生成前10个元素才能跳过它们
+        $this->assertLessThanOrEqual(21, $count); // 可能会多生成一个用于判断结束
+        $this->assertEquals(range(11, 20), array_values($result));
+    }
+
 }

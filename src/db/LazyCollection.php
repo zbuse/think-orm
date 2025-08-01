@@ -193,6 +193,27 @@ class LazyCollection implements IteratorAggregate, Countable, JsonSerializable, 
     }
 
     /**
+     * 分页获取数据
+     * @param int $page 页码（从1开始）
+     * @param int $listRows 每页数量
+     * @return static
+     */
+    public function page(int $page, int $listRows = 15)
+    {
+        if ($page < 1) {
+            throw new \InvalidArgumentException('Page should be at least 1');
+        }
+
+        if ($listRows < 1) {
+            throw new \InvalidArgumentException('Per page should be at least 1');
+        }
+
+        $offset = ($page - 1) * $listRows;
+
+        return $this->skip($offset)->take($listRows);
+    }
+
+    /**
      * 扁平化集合
      * @param int|float $depth 深度
      * @return static
