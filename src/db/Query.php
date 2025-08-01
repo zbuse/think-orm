@@ -14,6 +14,7 @@ declare (strict_types = 1);
 namespace think\db;
 
 use PDOStatement;
+use think\Collection;
 use think\db\exception\DbException as Exception;
 use think\model\LazyCollection as ModelLazyCollection;
 
@@ -552,51 +553,15 @@ class Query extends BaseQuery
      */
     public function chunk(int $count, callable $callback, string | array | null $column = null, string $order = 'asc'): bool
     {
-        if ($count < 1) {
-            throw new Exception('The chunk size should be at least 1');
-        }
-
-        $options = $this->getOptions();
-        $column  = $column ?: $this->getPk();
-        $bind    = $this->bind;
-
-        if ($this->getOption('order') || !is_string($column)) {
-            $times = 1;
-            $resultSet = $this->options($options)->page($times, $count)->select();
-        } else {
-            $resultSet = $this->options($options)->order($column, $order)->limit($count)->select();
-
-            if (str_contains($column, '.')) {
-                [$alias, $key] = explode('.', $column);
-            } else {
-                $key = $column;
-            }
-        }
-
-        while (true) {
-            if (false === call_user_func($callback, $resultSet)) {
+        $chunks = $this->lazy($count, $column, $order)->chunk($count);
+        
+        foreach ($chunks as $chunk) {
+            $result = $callback($chunk);
+            if ($result === false) {
                 return false;
             }
-
-            if (count($resultSet) < $count) {
-                break;
-            }
-
-            if (isset($times)) {
-                $times++;
-                $query = $this->options($options)->page($times, $count);
-            } else {
-                $end    = $resultSet->pop();
-                $lastId = is_array($end) ? $end[$key] : $end->getData($key);
-
-                $query = $this->options($options)
-                    ->limit($count)
-                    ->where($column, 'asc' == strtolower($order) ? '>' : '<', $lastId);
-            }
-
-            $resultSet = $query->bind($bind)->order($column, $order)->select();
         }
-
+        
         return true;
     }
 

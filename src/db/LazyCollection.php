@@ -577,4 +577,36 @@ class LazyCollection implements IteratorAggregate, Countable, JsonSerializable, 
     {
         return $this->where($field, 'not between', $value);
     }
+
+    /**
+     * 分块处理数据
+     * @param int $size 块大小
+     * @return static
+     */
+    public function chunk(int $size)
+    {
+        if ($size <= 0) {
+            throw new \InvalidArgumentException('Size should be greater than 0');
+        }
+
+        return new static(function () use ($size) {
+            $chunk = [];
+            $count = 0;
+
+            foreach ($this->getIterator() as $key => $value) {
+                $chunk[$key] = $value;
+                $count++;
+
+                if ($count >= $size) {
+                    yield new Collection($chunk);
+                    $chunk = [];
+                    $count = 0;
+                }
+            }
+
+            if (!empty($chunk)) {
+                yield new Collection($chunk);
+            }
+        });
+    }
 }
