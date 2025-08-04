@@ -97,7 +97,7 @@ class StreamMemoryTest extends TestCase
                 $batchCount++;
             }
             $currentMem = memory_get_usage() - $memStart;
-            $lazyPeakMemory = max($lazyPeakMemory, $currentMem);  
+            $lazyPeakMemory = max($lazyPeakMemory, $currentMem);
             if ($lazyCount >= 200) break;
         }
         $results['lazy'] = [

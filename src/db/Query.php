@@ -556,18 +556,18 @@ class Query extends BaseQuery
     /**
      * 分批数据返回处理.
      *
-     * @param int               $count    每次处理的数据数量
-     * @param callable          $callback 处理回调方法
-     * @param string|array|null $column   分批处理的字段名
-     * @param string            $order    字段排序
+     * @param int         $size    每次处理的数据数量
+     * @param callable    $callback 处理回调方法
+     * @param string|null $column   分批处理的字段名
+     * @param string      $order    字段排序
      *
      * @throws Exception
      *
      * @return bool
      */
-    public function chunk(int $count, callable $callback, string | array | null $column = null, string $order = 'asc'): bool
+    public function chunk(int $size, callable $callback, string | null $column = null, string $order = 'asc'): bool
     {
-        $chunks = $this->lazy($count, $column, $order)->chunk($count);
+        $chunks = $this->lazy($size, $column, $order)->chunk($size);
         
         foreach ($chunks as $chunk) {
             $result = $callback($chunk);
@@ -586,17 +586,17 @@ class Query extends BaseQuery
      * @param string      $order   字段排序 
      * @return LazyCollection
      */
-    public function lazy(int $count = 1000, ?string $column = null, string $order = 'desc'): LazyCollection
+    public function lazy(int $size = 1000, ?string $column = null, string $order = 'desc'): LazyCollection
     {
-        if ($count < 1) {
+        if ($size < 1) {
             throw new Exception('The chunk size should be at least 1');
         }
 
         $class = $this->model ? ModelLazyCollection::class : LazyCollection::class;
-        return new $class(function () use ($count, $column, $order) {
+        return new $class(function () use ($size, $column, $order) {
             $limit   = (int) $this->getOption('limit', 0);
             $column  = $column ?: $this->getPk();
-            $length  = $limit && $count >= $limit ? $limit : $count;
+            $length  = $limit && $size >= $limit ? $limit : $size;
             $options = $this->getOptions();
             $bind    = $this->bind;
             $times   = 0;
@@ -611,7 +611,7 @@ class Query extends BaseQuery
                 foreach ($resultSet as $item) {
                     yield $item;
                     $times++;
-                    if ($limit > $count && $times >= $limit) {
+                    if ($limit > $size && $times >= $limit) {
                         break 2;
                     }
                     if (!isset($page)) {
@@ -619,7 +619,7 @@ class Query extends BaseQuery
                     }
                 }
 
-                if (count($resultSet) < $count) {
+                if (count($resultSet) < $size) {
                     break;
                 }
 
