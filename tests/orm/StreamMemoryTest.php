@@ -95,9 +95,9 @@ class StreamMemoryTest extends TestCase
             // 每批结束时记录内存
             if ($lazyCount % 50 === 0) {
                 $batchCount++;
-                $currentMem = memory_get_usage() - $memStart;
-                $lazyPeakMemory = max($lazyPeakMemory, $currentMem);
             }
+            $currentMem = memory_get_usage() - $memStart;
+            $lazyPeakMemory = max($lazyPeakMemory, $currentMem);  
             if ($lazyCount >= 200) break;
         }
         $results['lazy'] = [

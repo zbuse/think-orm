@@ -504,7 +504,7 @@ class Query extends BaseQuery
     }
 
     /**
-     * 使用游标查找记录.（不支持关联查询和查询缓存）
+     * 使用游标查找记录.（不支持查询缓存）
      *
      * @param bool $unbuffered 是否开启无缓冲查询（仅限mysql）
      * 
@@ -513,15 +513,29 @@ class Query extends BaseQuery
     public function cursor(bool $unbuffered = false): LazyCollection
     {
         $connection = clone $this->connection;
+        $class      = $this->model ? ModelLazyCollection::class : LazyCollection::class;
 
-        $class = $this->model ? ModelLazyCollection::class : LazyCollection::class;
-        return new $class(function () use ($connection, $unbuffered) {
-            yield from $connection->cursor($this, $unbuffered);
-        });
+        if (!empty($this->options['with_join'])) {
+            $withJoin  = true;
+            $relations = $this->options['with_join'];
+        } elseif(!empty($this->options['with'])) {
+            $withJoin  = false;
+            $relations = $this->options['with'];
+        }
+
+        if (isset($withJoin)) {
+            return (new $class(function () use ($connection, $unbuffered) {
+                yield from $connection->cursor($this, $unbuffered);
+            }))->load($relations, false, $withJoin);
+        } else {
+            return new $class(function () use ($connection, $unbuffered) {
+                yield from $connection->cursor($this, $unbuffered);
+            });
+        }
     }
 
     /**
-     * 流式处理查询结果（不支持关联查询和查询缓存）
+     * 流式处理查询结果（不支持查询缓存）
      *
      * @param callable $callback    处理回调
      * @param bool     $unbuffered  是否使用无缓冲查询（仅MySQL支持）

@@ -240,31 +240,6 @@ class LazyCollection implements IteratorAggregate, Countable, JsonSerializable, 
     }
 
     /**
-     * 延迟预载入关联查询
-     * @param array $relation 关联
-     * @param mixed $cache    关联缓存
-     * @return static
-     */
-    public function load(array $relation, $cache = false)
-    {
-        return new static(function () use ($relation, $cache) {
-            $items = [];
-            foreach ($this->getIterator() as $key => $item) {
-                $items[$key] = $item;
-            }
-
-            if (!empty($items) && $items[0] instanceof Model) {
-                $first = reset($items);
-                $first->eagerlyResultSet($items, $relation, [], false, $cache);
-            }
-
-            foreach ($items as $key => $item) {
-                yield $key => $item;
-            }
-        });
-    }
-
-    /**
      * 转换为数组
      * @return array
      */
