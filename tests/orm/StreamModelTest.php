@@ -304,4 +304,199 @@ class StreamModelTest extends TestCase
         $this->assertEquals(5, $count);
     }
 
+    /**
+     * 测试LazyCollection的page方法基本功能
+     */
+    public function testLazyCollectionPage()
+    {
+        $lazy = StreamTestUser::cursor();
+        
+        // 测试第一页
+        $page1 = $lazy->page(1, 10);
+        $this->assertInstanceOf(LazyCollection::class, $page1);
+        
+        $users1 = [];
+        foreach ($page1 as $user) {
+            $users1[] = $user;
+        }
+        $this->assertCount(10, $users1);
+        
+        // 获取第一个和最后一个用户的ID
+        $firstUser = $users1[0];
+        $lastUser = $users1[9];
+        $this->assertEquals(1, $firstUser->id);
+        $this->assertEquals(10, $lastUser->id);
+        
+        // 测试第二页
+        $page2 = $lazy->page(2, 10);
+        $users2 = [];
+        foreach ($page2 as $user) {
+            $users2[] = $user;
+        }
+        $this->assertCount(10, $users2);
+        
+        $firstUserPage2 = $users2[0];
+        $lastUserPage2 = $users2[9];
+        $this->assertEquals(11, $firstUserPage2->id);
+        $this->assertEquals(20, $lastUserPage2->id);
+    }
+
+    /**
+     * 测试page方法与关联预载入的结合
+     */
+    public function testPageWithRelations()
+    {
+        $lazy = StreamTestUser::with(['profile'])->cursor();
+        
+        // 获取第一页数据
+        $page1 = $lazy->page(1, 5);
+        
+        $count = 0;
+        foreach ($page1 as $user) {
+            $this->assertInstanceOf(StreamTestUser::class, $user);
+            // 验证profile已经预载入
+            $this->assertInstanceOf(StreamTestProfile::class, $user->profile);
+            $this->assertEquals($user->id, $user->profile->user_id);
+            $count++;
+        }
+        
+        $this->assertEquals(5, $count);
+    }
+
+    /**
+     * 测试page方法的边界情况
+     */
+    public function testPageBoundaries()
+    {
+        $lazy = StreamTestUser::cursor();
+        
+        // 测试超出范围的页码
+        $page100 = $lazy->page(100, 10);
+        $users = [];
+        foreach ($page100 as $user) {
+            $users[] = $user;
+        }
+        $this->assertCount(0, $users); // 应该返回空数组
+        
+        // 测试最后一页（总共50条数据）
+        $lastPage = $lazy->page(5, 10);
+        $lastPageUsers = [];
+        foreach ($lastPage as $user) {
+            $lastPageUsers[] = $user;
+        }
+        $this->assertCount(10, $lastPageUsers);
+        
+        // 测试部分填充的最后一页
+        $partialPage = $lazy->page(6, 10);
+        $partialUsers = [];
+        foreach ($partialPage as $user) {
+            $partialUsers[] = $user;
+        }
+        $this->assertCount(0, $partialUsers); // 第6页应该没有数据
+        
+        // 测试恰好完整的最后一页
+        $exactLastPage = $lazy->page(10, 5);
+        $exactUsers = [];
+        foreach ($exactLastPage as $user) {
+            $exactUsers[] = $user;
+        }
+        $this->assertCount(5, $exactUsers);
+        $firstUser = $exactUsers[0];
+        $lastUser = $exactUsers[4];
+        $this->assertEquals(46, $firstUser->id);
+        $this->assertEquals(50, $lastUser->id);
+    }
+
+    /**
+     * 测试page方法的链式调用
+     */
+    public function testPageChaining()
+    {
+        $result = [];
+        $paged = StreamTestUser::cursor()
+            ->filter(function($user) {
+                // 只保留偶数ID的用户
+                return $user->id % 2 == 0;
+            })
+            ->page(2, 5);
+            
+        foreach ($paged as $user) {
+            $result[] = $user;
+        }
+        
+        $this->assertCount(5, $result);
+        
+        // 偶数ID: 2,4,6,8,10,12,14,16,18,20...
+        // 第二页应该是: 12,14,16,18,20
+        $ids = array_map(function($user) {
+            return $user->id;
+        }, $result);
+        
+        $this->assertEquals([12, 14, 16, 18, 20], array_values($ids));
+    }
+
+    /**
+     * 测试page方法的惰性求值特性
+     */
+    public function testPageLazyEvaluation()
+    {
+        // 使用一个标志来检测查询是否执行
+        $queryExecuted = false;
+        
+        // 创建一个生成器来模拟惰性加载
+        $generator = function() use (&$queryExecuted) {
+            $queryExecuted = true;
+            $users = StreamTestUser::select();
+            foreach ($users as $user) {
+                yield $user;
+            }
+        };
+        
+        // 创建LazyCollection但不立即执行
+        $lazy = new ModelLazyCollection($generator);
+        $paged = $lazy->page(3, 10);
+        
+        // 此时生成器还没有执行
+        $this->assertFalse($queryExecuted);
+        
+        // 遍历时才执行生成器
+        $users = [];
+        foreach ($paged as $user) {
+            $users[] = $user;
+        }
+        $this->assertTrue($queryExecuted);
+        $this->assertCount(10, $users);
+    }
+
+    /**
+     * 测试page方法与map的结合使用
+     */
+    public function testPageWithMap()
+    {
+        $result = [];
+        $mapped = StreamTestUser::cursor()
+            ->page(1, 5)
+            ->map(function($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => strtoupper($user->name),
+                    'email' => $user->email
+                ];
+            });
+            
+        foreach ($mapped as $item) {
+            $result[] = $item;
+        }
+        
+        $this->assertCount(5, $result);
+        
+        // 验证第一个用户的数据格式
+        $firstUser = $result[0];
+        $this->assertIsArray($firstUser);
+        $this->assertArrayHasKey('id', $firstUser);
+        $this->assertArrayHasKey('name', $firstUser);
+        $this->assertArrayHasKey('email', $firstUser);
+        $this->assertEquals('USER 1', $firstUser['name']); // 应该是大写的
+    }
+
 }

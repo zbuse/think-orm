@@ -200,17 +200,28 @@ class LazyCollection implements IteratorAggregate, Countable, JsonSerializable, 
      */
     public function page(int $page, int $listRows = 15)
     {
-        if ($page < 1) {
-            throw new \InvalidArgumentException('Page should be at least 1');
-        }
-
-        if ($listRows < 1) {
-            throw new \InvalidArgumentException('Per page should be at least 1');
+        if ($page < 1 || $listRows < 1) {
+            throw new \InvalidArgumentException(
+                $page < 1 ? 'Page should be at least 1' : 'Per page should be at least 1'
+            );
         }
 
         $offset = ($page - 1) * $listRows;
+        return new static(function () use ($offset, $listRows) {
+            $index = 0;
+            $taken = 0;
+            foreach ($this->getIterator() as $key => $value) {
+                if ($index++ < $offset) {
+                    continue;
+                }
 
-        return $this->skip($offset)->take($listRows);
+                yield $key => $value;
+                
+                if (++$taken >= $listRows) {
+                    break;
+                }
+            }
+        });
     }
 
     /**
