@@ -278,7 +278,7 @@ abstract class Model implements JsonSerializable, ArrayAccess, Arrayable, Jsonab
      *
      * @return Modelable
      */
-    protected function fetchModel(Model $model,array $options = []): Modelable
+    protected function fetchModel(Model $model, array $options = []): Modelable
     {
         $class = $model->getOption('entityClass', str_replace('\\model\\', '\\entity\\', static::class));
         if (class_exists($class) && is_subclass_of($class, Entity::class)) {

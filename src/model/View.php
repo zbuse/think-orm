@@ -341,12 +341,14 @@ abstract class View extends Entity
      *  设置模型.
      *
      * @param Model $model 模型对象
+     * @param array $options 查询参数
      * @return $this
      */
-    public function setModel(Model $model)
+    public function setModel(Model $model, array $options = [])
     {
         parent::setModel($model);
-        $this->initData();
+        $with = !empty($options['with']) ? true : false;
+        $this->initData($with);
         return $this;
     }
 

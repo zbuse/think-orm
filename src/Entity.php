@@ -117,8 +117,9 @@ abstract class Entity implements JsonSerializable, ArrayAccess, Arrayable, Jsona
      * 创建新的实例.
      *
      * @param Model $model 模型连接对象
+     * @param array $options 查询参数
      */
-    public function newInstance(?Model $model)
+    public function newInstance(?Model $model, array $options = [])
     {
         $entity = new static();
         return $entity->setModel($model);
