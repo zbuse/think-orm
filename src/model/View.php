@@ -31,21 +31,24 @@ abstract class View extends Entity
      * 架构函数.
      *
      * @param Model $model 模型连接对象
+     * @param array $options
      */
-    public function __construct(?Model $model = null)
+    public function __construct(?Model $model = null, array $options = [])
     {
         parent::__construct($model);
 
+        $with = !empty($options['with']) ? true : false;
         // 初始化模型数据
-        $this->initData();
+        $this->initData($with);
     }
 
     /**
      * 初始化实体数据属性.
+     * @param bool $with 是否包含预载入关联查询
      *
      * @return void
      */
-    protected function initData()
+    protected function initData(bool $with = false)
     {
         // 获取属性映射关系
         $properties = $this->getEntityPropertiesMap();
@@ -56,13 +59,13 @@ abstract class View extends Entity
         foreach ($properties as $key => $field) {
             if (is_int($key)) {
                 // 主模型同名属性
-                $this->$field = $this->fetchViewAttr($field, $data);
+                $this->$field = $this->fetchViewAttr($field, $data, $with);
             } elseif (strpos($field, '->')) {
                 // 关联属性或JSON字段映射
                 $this->$key = $this->getRelationMapAttr($field, $data);
             } else {
                 // 主模型属性映射
-                $this->$key = $this->fetchViewAttr($field, $data);
+                $this->$key = $this->fetchViewAttr($field, $data, $with);
             }
         }
         // 标记数据存在
@@ -102,11 +105,11 @@ abstract class View extends Entity
      *
      * @return mixed
      */
-    private function fetchViewAttr(string $field, array $data)
+    private function fetchViewAttr(string $field, array $data, bool $with = false)
     {
         $method = 'get' . Str::camel($field) . 'Attr';
         $model  = $this->model();
-        if (method_exists($this, $method)) {
+        if ($with && method_exists($this, $method)) {
             // 视图获取器
             $value = $this->$method($model); 
         } elseif ($model->hasData($field)) {
