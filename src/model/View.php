@@ -102,6 +102,7 @@ abstract class View extends Entity
      *
      * @param string $field 视图属性
      * @param array  $data  模型数据
+     * @param bool   $with  是否包含关联查询
      *
      * @return mixed
      */

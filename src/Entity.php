@@ -122,7 +122,7 @@ abstract class Entity implements JsonSerializable, ArrayAccess, Arrayable, Jsona
     public function newInstance(?Model $model, array $options = [])
     {
         $entity = new static();
-        return $entity->setModel($model);
+        return $entity->setModel($model, $options);
     }
 
     /**
