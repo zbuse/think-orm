@@ -109,7 +109,7 @@ abstract class View extends Entity
     {
         $method = 'get' . Str::camel($field) . 'Attr';
         $model  = $this->model();
-        if ($with && method_exists($this, $method)) {
+        if (!$with && method_exists($this, $method)) {
             // 视图获取器
             $value = $this->$method($model); 
         } elseif ($model->hasData($field)) {
