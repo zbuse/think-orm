@@ -40,7 +40,14 @@ abstract class Entity implements JsonSerializable, ArrayAccess, Arrayable, Jsona
         $this->initWeakMap();
 
         // 获取实体模型参数
-        $options = array_merge($this->getBaseOptions(), $this->getOptions());
+        $baseOptions = $this->getBaseOptions();
+        $options     = $this->getOptions();
+        
+        foreach (['viewMapping', 'autoMapping'] as $item) {
+            $options[$item] = array_merge($baseOptions[$item] ?? [], $options[$item] ?? []);
+        }
+
+        $options = array_merge($baseOptions, $options);
 
         if (is_null($model)) {
             $class = !empty($options['modelClass']) ? $options['modelClass'] : str_replace('\\entity\\', '\\model\\', static::class);
