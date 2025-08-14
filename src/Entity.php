@@ -40,7 +40,7 @@ abstract class Entity implements JsonSerializable, ArrayAccess, Arrayable, Jsona
         $this->initWeakMap();
 
         // 获取实体模型参数
-        $options = $this->getOptions();
+        $options = array_merge($this->getBaseOptions(), $this->getOptions());
 
         if (is_null($model)) {
             $class = !empty($options['modelClass']) ? $options['modelClass'] : str_replace('\\entity\\', '\\model\\', static::class);
@@ -65,7 +65,17 @@ abstract class Entity implements JsonSerializable, ArrayAccess, Arrayable, Jsona
     }
 
     /**
-     * 在实体模型中定义 返回相关配置参数.
+     * 定义实体模型的基础配置参数.
+     *
+     * @return array
+     */
+    protected function getBaseOptions(): array
+    {
+        return [];
+    }
+
+    /**
+     * 定义实体模型相关配置参数.
      *
      * @return array
      */
