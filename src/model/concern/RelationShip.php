@@ -425,18 +425,13 @@ trait RelationShip
             if (is_array($relation)) {
                 $subRelation = $relation;
                 $relation    = $key;
-            } elseif (is_string($relation)) {
-                if (str_contains($relation, '.')) {
-                    [$relation, $subRelation] = explode('.', $relation, 2);
+            } elseif (str_contains($relation, '.')) {
+                [$relation, $subRelation] = explode('.', $relation, 2);
 
-                    $subRelation = [$subRelation];
-                } elseif (is_string($key)) {
-                    $relationName = $relation;
-                    $relation     = $key;
-                }
+                $subRelation = [$subRelation];
             }
 
-            $relationName   = $relationName ?? $relation;
+            $relationName   = $relation;
             $relation       = Str::camel($relation);
             $relationResult = $this->$relation();
 
