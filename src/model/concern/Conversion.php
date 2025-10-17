@@ -148,7 +148,14 @@ trait Conversion
         // 输出额外属性 必须定义获取器
         foreach ($this->getOption('append') as $key => $field) {
             if (is_numeric($key)) {
-                $item[$field] = $this->get($field);
+                if (strpos($field, '.')) {
+                    [$name, $field] = explode('.', $field, 2);
+                    $relation = $this->getRelationData($name, false);
+                    $value    = $relation?->get($field);
+                } else {
+                    $value = $this->get($field);
+                }
+                $item[$field] = $value;
             } else {
                 // 追加关联属性
                 $relation = $this->getRelationData($key, false);
