@@ -97,9 +97,9 @@ trait SoftDelete
         $force = $this->isForce();
 
         if ($name && !$force) {
-            foreach ($this->getData() as $name => $val) {
+            foreach ($this->getData() as $key => $val) {
                 if ($val instanceof Model || $val instanceof Collection) {
-                    $relations[$name] = $val;
+                    $relations[$key] = $val;
                 }
             }
             // 软删除
