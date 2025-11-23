@@ -85,6 +85,8 @@ abstract class PDOConnection extends Connection
         'break_match_str' => [],
         // 自动参数绑定
         'auto_param_bind' => true,
+        // 数据库时区设置
+        'timezone'        => '',
     ];
 
     /**
@@ -585,6 +587,9 @@ abstract class PDOConnection extends Connection
             if (!empty($config['trigger_sql'])) {
                 $this->trigger('CONNECT:[ UseTime:' . number_format(microtime(true) - $startTime, 6) . 's ] ' . $config['dsn']);
             }
+
+            // 设置数据库时区
+            $this->setTimezone($this->links[$linkNum], $config['timezone']);
 
             $this->db->trigger('after_connect', $this->links[$linkNum]);
             return $this->links[$linkNum];
@@ -2006,5 +2011,44 @@ abstract class PDOConnection extends Connection
      */
     public function rollbackXa(string $xid): void
     {
+    }
+
+    /**
+     * 设置数据库时区.
+     *
+     * @param PDO   $pdo       PDO实例
+     * @param string $timezone 时区名称，如 'Asia/Shanghai' 或 '+08:00'
+     *
+     * @return void
+     */
+    protected function setTimezone(PDO $pdo, string $timezone): void
+    {
+        if (empty($timezone)) {
+            return;
+        }
+
+        try {
+            $sql = $this->getSetTimezoneSql($timezone);
+            if (!empty($sql)) {
+                $pdo->exec($sql);
+            }
+        } catch (\Exception $e) {
+            // 时区设置失败，记录日志但不中断连接
+            $this->db->log('Set timezone failed: ' . $e->getMessage(), 'warning');
+        }
+    }
+
+    /**
+     * 获取设置时区的SQL语句.
+     * 子类应重写此方法以提供数据库特定的时区设置SQL.
+     *
+     * @param string $timezone 时区名称
+     *
+     * @return string
+     */
+    protected function getSetTimezoneSql(string $timezone): string
+    {
+        // 默认实现，子类应重写此方法
+        return '';
     }
 }
