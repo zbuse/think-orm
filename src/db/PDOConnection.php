@@ -586,6 +586,7 @@ abstract class PDOConnection extends Connection
                 $this->trigger('CONNECT:[ UseTime:' . number_format(microtime(true) - $startTime, 6) . 's ] ' . $config['dsn']);
             }
 
+            $this->db->trigger('after_connect', $this->links[$linkNum]);
             return $this->links[$linkNum];
         } catch (\PDOException $e) {
             if ($autoConnection) {
