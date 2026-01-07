@@ -30,7 +30,7 @@ class DateTime implements Typeable
                 if (is_object($time)) {
                 } elseif (is_numeric($time)) {
                     $time  = (new \DateTime())->setTimestamp((int) $time);
-                } elseif (strpos('.', $time)) {
+                } elseif (strpos($time, '.')) {
                     $time  = \DateTime::createFromFormat('Y-m-d H:i:s.u', $time);
                 } else {
                     $time  = $time ? (new \DateTime($time)) : null;
