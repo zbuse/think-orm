@@ -135,9 +135,9 @@ SQL;
      *
      * @return array
      */
-    public function getTables(string $dbName = ''): array
+    public function getTables(string $dbName = 'public'): array
     {
-        $sql    = "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename";
+        $sql    = "SELECT tablename FROM pg_tables WHERE schemaname = '$dbName' ORDER BY tablename";
         $pdo    = $this->getPDOStatement($sql);
         $result = $pdo->fetchAll(PDO::FETCH_ASSOC);
 
