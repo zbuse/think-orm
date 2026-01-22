@@ -56,20 +56,39 @@ abstract class View extends Entity
         if (empty($data)) {
             return ;
         }
+
         foreach ($properties as $key => $field) {
-            if (is_int($key)) {
-                // 主模型同名属性
-                $this->$field = $this->fetchViewAttr($field, $data, $with);
-            } elseif (strpos($field, '->')) {
-                // 关联属性或JSON字段映射
-                $this->$key = $this->getAttrOfRelationMap($field, $data);
-            } else {
-                // 主模型属性映射
-                $this->$key = $this->fetchViewAttr($field, $data, $with);
+            [$name, $value] = $this->getViewAttrValue($key, $field, $data, $with);
+            if ($value !== null) {
+                $this->$name = $value;
             }
         }
         // 标记数据存在
         $this->exists(true);
+}
+
+    /**
+     * 获取视图属性信息.
+     *
+     * @param string|int $key   属性键名
+     * @param string     $field 映射字段
+     * @param array      $data  模型数据
+     * @param bool       $with  是否包含关联查询
+     *
+     * @return array
+     */
+    private function getViewAttrValue($key, string $field, array $data, bool $with = false): array
+    {
+        if (is_int($key)) {
+            // 主模型同名属性
+            return [$field, $this->fetchViewAttr($field, $data, $with)];
+        } elseif (strpos($field, '->')) {
+            // 关联属性或JSON字段映射
+            return [$key, $this->getAttrOfRelationMap($field, $data)];
+        } else {
+            // 主模型属性映射
+            return [$key, $this->fetchViewAttr($field, $data, $with)];
+        }
     }
 
     /**
