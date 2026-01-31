@@ -288,8 +288,14 @@ class Mongo
             // 表达式查询
             $result['$where'] = $value instanceof Javascript ? $value : new Javascript($value);
         } elseif ('like' == $exp) {
-            // 模糊查询 采用正则方式
-            $result[$key] = $value instanceof Regex ? $value : new Regex($value, 'i');
+            if ($value instanceof Regex) {
+                //采用正则表达式
+                $result[$key] = $value;
+            } else {
+                // 转义正则特殊字符
+                $value        = preg_quote($value, '/');
+                $result[$key] = new Regex($value, 'i');
+            }
         } elseif (in_array($exp, ['nin', 'in'])) {
             // IN 查询
             $value = is_array($value) ? $value : explode(',', $value);
