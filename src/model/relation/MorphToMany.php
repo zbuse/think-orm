@@ -320,7 +320,8 @@ class MorphToMany extends BelongsToMany
             $pivot[$this->morphType] = $this->morphClass;
 
             $result = [];
-            foreach ((array) $ids as $id) {
+            $ids = (array) $id;
+            foreach ($ids as $id) {
                 $pivot[$this->foreignKey] = $id;
                 $object = $this->newPivot();
                 $object->replace()->save($pivot);
